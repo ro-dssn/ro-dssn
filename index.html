@@ -179,8 +179,8 @@
                     <button type="submit" class="btn">Logg inn</button>
                 </form>
                 <div style="text-align: center; margin-top: 20px;">
-                    <a href="mailto:esp1@dssn.no" style="color: #C41E3A; text-decoration: none; font-size: 0.9em;">
-                        Glemt passord? Kontakt oss: esp1@dssn.no
+                    <a href="/cdn-cgi/l/email-protection#5d382e2d6c1d392e2e33733332" style="color: #C41E3A; text-decoration: none; font-size: 0.9em;">
+                        Glemt passord? Kontakt oss: <span class="__cf_email__" data-cfemail="89ecfaf9b8c9edfafae7a7e7e6">[email&#160;protected]</span>
                     </a>
                 </div>
                 <div style="text-align: center; margin-top: 15px;">
@@ -275,7 +275,7 @@
                     <li><strong>Trekke tilbake</strong> samtykke (dette vil medføre at du ikke lenger kan bruke portalen)</li>
                     <li><strong>Klage</strong> til Datatilsynet dersom du mener behandlingen er ulovlig</li>
                 </ul>
-                <p>For å utøve dine rettigheter, kontakt: <strong>esp1@dssn.no</strong></p>
+                <p>For å utøve dine rettigheter, kontakt: <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e5809695d4a58196968bcb8b8a">[email&#160;protected]</a></strong></p>
                 
                 <h3>Samtykke</h3>
                 <p>Ved å akseptere nedenfor samtykker du til behandling av dine personopplysninger som beskrevet over.</p>
@@ -298,7 +298,7 @@
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyC0OvKlWDriZxE_MhM-BADXDDirjbEQU0w",
@@ -458,14 +458,6 @@
                 const userCredential = await auth.createUserWithEmailAndPassword(email, pass1);
                 const user = userCredential.user;
                 
-                // Mark code as used
-                const codeDoc = codesSnapshot.docs[0];
-                await db.collection('activation_codes').doc(codeDoc.id).update({
-                    used: true,
-                    activatedAt: new Date().toISOString(),
-                    userId: user.uid
-                });
-                
                 // Create user profile
                 await db.collection('users').doc(user.uid).set({
                     email: user.email,
@@ -518,16 +510,4 @@
             } catch (error) {
                 console.error('GDPR consent error:', error);
                 alert('Feil ved lagring av samtykke: ' + error.message);
-            }
-        }
-
-        // Alert Helper
-        function showAlert(message, type, elementId) {
-            const alert = document.getElementById(elementId);
-            alert.textContent = message;
-            alert.className = `alert alert-${type}`;
-            alert.classList.remove('hidden');
-        }
-    </script>
-</body>
-</html>
+  
