@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSSN RO-portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --dssn-red: #C41E3A;
+            --dssn-dark-red: #8B0000;
+            --dssn-black: #1a1a1a;
+            --dssn-gray: #2a2a2a;
+            --text-white: #ffffff;
+            --success: #4CAF50;
+            --warning: #ff9800;
+            --error: #f44336;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dssn-black) 0%, var(--dssn-gray) 100%);
+            color: var(--text-white);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .login-box {
+            background: linear-gradient(135deg, var(--dssn-gray) 0%, var(--dssn-black) 100%);
+            border: 2px solid var(--dssn-red);
+            border-radius: 12px;
+            padding: 40px;
+            margin-top: 50px;
+            box-shadow: 0 8px 32px rgba(196, 30, 58, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--dssn-red);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #cccccc;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cccccc;
+            font-weight: 500;
+        }
+        
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(196, 30, 58, 0.3);
+            border-radius: 6px;
+            color: var(--text-white);
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--dssn-red);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 10px rgba(196, 30, 58, 0.3);
+        }
+        
+        input::placeholder {
+            color: #888;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--dssn-red);
+            color: var(--text-white);
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn:hover {
+            background: var(--dssn-dark-red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid var(--error);
+            color: #ffcccc;
+        }
+        
+        .alert-success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid var(--success);
+            color: #ccffcc;
+        }
+        
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .spinner.show {
+            display: block;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <h1>DSSN RO-portal</h1>
+            <p class="subtitle">Range Officer Management System</p>
+            
+            <div id="alert" class="alert"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">E-post</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="username"
+                        autocomplete="username"
+                        placeholder="din.epost@example.com" 
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Passord</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password"
+                        autocomplete="current-password"
+                        placeholder="••••••••" 
+                        required
+                    >
+                </div>
+                
+                <button type="submit" class="btn" id="loginBtn">
+                    <span id="btnText">Logg inn</span>
+                    <div class="spinner" id="spinner"></div>
+                </button>
+            </form>
+            
+            <div class="footer">
+                DSSN Region Øst © 2026
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Configuration
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0OvKlWDriZxE_MhM-BADXDDirjbEQU0w",
+            authDomain: "dssn-ro.firebaseapp.com",
+            projectId: "dssn-ro",
+            storageBucket: "dssn-ro.firebasestorage.app",
+            messagingSenderId: "412595017547",
+            appId: "1:412595017547:web:e1e7fbcc4e99077bae7ace",
+            measurementId: "G-F0YKJVHW2E"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Check if already logged in
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Check if user is approved RO
+                const isApproved = await checkROApproval(user.email);
+                if (isApproved) {
+                    window.location.href = 'portal.html';
+                }
+            }
+        });
+
+        // Load and parse ro.xlsx from GitHub
+        async function loadROWhitelist() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/kurs-dssn/dssn-ro/main/ro.xlsx');
+                const blob = await response.blob();
+                const arrayBuffer = await blob.arrayBuffer();
+                
+                // Use SheetJS to parse Excel
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(firstSheet);
+                
+                return data;
+            } catch (error) {
+                console.error('Failed to load RO whitelist:', error);
+                return [];
+            }
+        }
+
+        // Check if email is in RO whitelist
+        async function checkROApproval(email) {
+            const whitelist = await loadROWhitelist();
+            const normalizedEmail = email.toLowerCase().trim();
+            
+            // Check if email exists in whitelist
+            const isApproved = whitelist.some(row => {
+                const rowEmail = (row.email || row.Email || row['E-mail'] || '').toLowerCase().trim();
+                return rowEmail === normalizedEmail;
+            });
+            
+            return isApproved;
+        }
+
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('spinner');
+            const alert = document.getElementById('alert');
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            btnText.style.display = 'none';
+            spinner.classList.add('show');
+            alert.classList.remove('show');
+            
+            try {
+                // Sign in with Firebase
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Check if user is approved RO
+                const isApproved = await checkROApproval(email);
+                
+                if (!isApproved) {
+                    // Not approved - sign out
+                    await auth.signOut();
+                    showAlert('Du er ikke registrert som godkjent Range Officer.', 'error');
+                    loginBtn.disabled = false;
+                    btnText.style.display = 'block';
+                    spinner.classList.remove('show');
+                    return;
+                }
+                
+                // Create/update user profile in Firestore
+                await setDoc(doc(db, 'users', user.uid), {
+                    email: user.email,
+                    lastLogin: new Date().toISOString(),
+                    role: 'RO'
+                }, { merge: true });
+                
+                // Redirect to portal
+                showAlert('Innlogging vellykket!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'portal.html';
+                }, 500);
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                let errorMessage = 'Innlogging feilet. ';
+                
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage += 'Ugyldig e-postadresse.';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage += 'Denne kontoen er deaktivert.';
+                        break;
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        errorMessage += 'Feil e-post eller passord.';
+                        break;
+                    case 'auth/invalid-credential':
+                        errorMessage += 'Feil e-post eller passord.';
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+                
+                showAlert(errorMessage, 'error');
+                loginBtn.disabled = false;
+                btnText.style.display = 'block';
+                spinner.classList.remove('show');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+        }
+    </script>
+    
+    <!-- SheetJS for Excel parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

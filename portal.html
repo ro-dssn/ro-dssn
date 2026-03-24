@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSSN RO-portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --dssn-red: #C41E3A;
+            --dssn-dark-red: #8B0000;
+            --dssn-black: #1a1a1a;
+            --dssn-gray: #2a2a2a;
+            --dssn-light-gray: #3a3a3a;
+            --text-white: #ffffff;
+            --success: #4CAF50;
+            --warning: #ff9800;
+            --error: #f44336;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--dssn-black);
+            color: var(--text-white);
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--dssn-gray) 0%, var(--dssn-black) 100%);
+            border-bottom: 2px solid var(--dssn-red);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(196, 30, 58, 0.3);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--dssn-red);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .user-email {
+            color: #cccccc;
+        }
+        
+        .btn-logout {
+            padding: 8px 16px;
+            background: var(--dssn-red);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-logout:hover {
+            background: var(--dssn-dark-red);
+        }
+        
+        /* Navigation */
+        .nav {
+            background: var(--dssn-gray);
+            border-bottom: 1px solid var(--dssn-light-gray);
+        }
+        
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 5px;
+            padding: 0 20px;
+        }
+        
+        .nav-btn {
+            padding: 15px 25px;
+            background: transparent;
+            color: #cccccc;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(196, 30, 58, 0.1);
+            color: var(--text-white);
+        }
+        
+        .nav-btn.active {
+            color: var(--dssn-red);
+            border-bottom-color: var(--dssn-red);
+        }
+        
+        /* Main Content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .view {
+            display: none;
+        }
+        
+        .view.active {
+            display: block;
+        }
+        
+        .card {
+            background: var(--dssn-gray);
+            border: 1px solid var(--dssn-light-gray);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            color: var(--dssn-red);
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--dssn-light-gray);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        thead {
+            background: var(--dssn-red);
+        }
+        
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: white;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--dssn-gray);
+        }
+        
+        tbody tr:hover {
+            background: rgba(196, 30, 58, 0.1);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            background: var(--dssn-red);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: var(--dssn-dark-red);
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-success:hover {
+            background: #45a049;
+        }
+        
+        /* Alert */
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid var(--success);
+            color: #ccffcc;
+        }
+        
+        .alert-error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid var(--error);
+            color: #ffcccc;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+        
+        .empty-state h3 {
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">DSSN RO-portal</div>
+            <div class="user-info">
+                <span class="user-email" id="userEmail">Laster...</span>
+                <button class="btn-logout" onclick="logout()">Logg ut</button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-content">
+            <button class="nav-btn active" onclick="showView('matches')">Matches</button>
+            <button class="nav-btn" onclick="showView('points')">Poengkort</button>
+            <button class="nav-btn" onclick="showView('claim')">Claim poeng</button>
+            <button class="nav-btn" onclick="showView('profile')">Min profil</button>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <div id="alert" class="alert"></div>
+        
+        <!-- Matches View -->
+        <div id="matchesView" class="view active">
+            <div class="card">
+                <h2>Matches</h2>
+                <div id="matchesContent" class="loading">Laster matches...</div>
+            </div>
+        </div>
+        
+        <!-- Points Card View -->
+        <div id="pointsView" class="view">
+            <div class="card">
+                <h2>Poengkort (Inneværende år)</h2>
+                <div id="pointsContent" class="loading">Laster poengkort...</div>
+            </div>
+        </div>
+        
+        <!-- Claim Points View -->
+        <div id="claimView" class="view">
+            <div class="card">
+                <h2>Claim match poeng</h2>
+                <p style="color: #aaa; margin-bottom: 20px;">(Matches som endte siste 3 måneder)</p>
+                <div id="claimContent" class="loading">Laster tilgjengelige matches...</div>
+            </div>
+        </div>
+        
+        <!-- Profile View -->
+        <div id="profileView" class="view">
+            <div class="card">
+                <h2>Min profil</h2>
+                <div id="profileContent" class="loading">Laster profil...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getFirestore, collection, getDocs, query, where, orderBy, limit, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0OvKlWDriZxE_MhM-BADXDDirjbEQU0w",
+            authDomain: "dssn-ro.firebaseapp.com",
+            projectId: "dssn-ro",
+            storageBucket: "dssn-ro.firebasestorage.app",
+            messagingSenderId: "412595017547",
+            appId: "1:412595017547:web:e1e7fbcc4e99077bae7ace",
+            measurementId: "G-F0YKJVHW2E"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let currentUser = null;
+
+        // Auth State Handler
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = user;
+            document.getElementById('userEmail').textContent = user.email;
+            
+            // Load initial data
+            loadMatches();
+        });
+
+        // Logout
+        window.logout = async () => {
+            await signOut(auth);
+            window.location.href = 'index.html';
+        };
+
+        // Navigation
+        window.showView = (viewName) => {
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update views
+            document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+            document.getElementById(viewName + 'View').classList.add('active');
+            
+            // Load data for the view
+            switch(viewName) {
+                case 'matches':
+                    loadMatches();
+                    break;
+                case 'points':
+                    loadPointsCard();
+                    break;
+                case 'claim':
+                    loadClaimableMatches();
+                    break;
+                case 'profile':
+                    loadProfile();
+                    break;
+            }
+        };
+
+        // Load Matches
+        async function loadMatches() {
+            const content = document.getElementById('matchesContent');
+            
+            try {
+                const matchesRef = collection(db, 'matches');
+                const q = query(matchesRef, orderBy('matchStart', 'desc'), limit(20));
+                const snapshot = await getDocs(q);
+                
+                if (snapshot.empty) {
+                    content.innerHTML = '<div class="empty-state"><h3>Ingen matches funnet</h3><p>Det er ingen registrerte matches ennå.</p></div>';
+                    return;
+                }
+                
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Match #</th>
+                                <th>Match navn</th>
+                                <th>Discipline</th>
+                                <th>Level</th>
+                                <th>Region</th>
+                                <th>Dato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                snapshot.forEach(doc => {
+                    const match = doc.data();
+                    html += `
+                        <tr>
+                            <td>${match.matchId || '-'}</td>
+                            <td>${match.matchName || '-'}</td>
+                            <td>${match.discipline || '-'}</td>
+                            <td>${match.level || '-'}</td>
+                            <td>${match.region || '-'}</td>
+                            <td>${formatDate(match.matchStart)}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                content.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading matches:', error);
+                content.innerHTML = '<div class="empty-state"><h3>Feil ved lasting</h3><p>' + error.message + '</p></div>';
+            }
+        }
+
+        // Load Points Card
+        async function loadPointsCard() {
+            const content = document.getElementById('pointsContent');
+            const currentYear = new Date().getFullYear();
+            
+            content.innerHTML = `
+                <div class="empty-state">
+                    <h3>Poengkort for ${currentYear}</h3>
+                    <p>Poengkort-funksjonalitet kommer snart.</p>
+                </div>
+            `;
+        }
+
+        // Load Claimable Matches
+        async function loadClaimableMatches() {
+            const content = document.getElementById('claimContent');
+            
+            content.innerHTML = `
+                <div class="empty-state">
+                    <h3>Claim match poeng</h3>
+                    <p>Claim-funksjonalitet kommer snart.</p>
+                </div>
+            `;
+        }
+
+        // Load Profile
+        async function loadProfile() {
+            const content = document.getElementById('profileContent');
+            
+            if (!currentUser) return;
+            
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                const userData = userDoc.data() || {};
+                
+                content.innerHTML = `
+                    <div style="max-width: 600px;">
+                        <p><strong>E-post:</strong> ${currentUser.email}</p>
+                        <p><strong>Rolle:</strong> Range Officer</p>
+                        <p><strong>Siste innlogging:</strong> ${userData.lastLogin ? formatDate(userData.lastLogin) : '-'}</p>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                content.innerHTML = '<div class="empty-state"><h3>Feil ved lasting</h3></div>';
+            }
+        }
+
+        // Utility Functions
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('no-NO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+    </script>
+</body>
+</html>
