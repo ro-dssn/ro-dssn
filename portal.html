@@ -24,6 +24,8 @@
             background: linear-gradient(135deg, var(--dssn-black) 0%, var(--dssn-gray) 100%);
             color: var(--text-white);
             min-height: 100vh;
+            overflow-x: hidden;
+            touch-action: pan-y;
         }
         .header {
             background: var(--dssn-black);
@@ -32,6 +34,7 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 3px solid var(--dssn-red);
+            overflow-x: hidden;
         }
         .header h1 {
             color: var(--dssn-red);
@@ -85,6 +88,7 @@
             padding: 40px;
             max-width: 1400px;
             margin: 0 auto;
+            overflow-x: hidden;
         }
         .tab-content {
             display: none;
@@ -131,6 +135,7 @@
             color: var(--text-white);
             font-size: 1em;
             font-family: inherit;
+            touch-action: manipulation;
         }
         .form-group select {
             appearance: none;
@@ -207,6 +212,7 @@
             border: 2px solid var(--dssn-red);
             max-height: 90vh;
             overflow-y: auto;
+            overflow-x: hidden;
         }
         .alert {
             padding: 12px;
@@ -369,6 +375,9 @@
             .modal-content {
                 max-width: 700px;
             }
+            .points-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         
         @media (max-width: 480px) {
@@ -395,7 +404,7 @@
         /* POENGKORT STYLES */
         .points-dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 40px;
         }
