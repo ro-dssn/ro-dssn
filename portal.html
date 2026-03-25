@@ -433,6 +433,7 @@
         let map = null;
         let marker = null;
         let geocoder = null;
+        let autocomplete = null;
 
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
@@ -449,17 +450,7 @@
             const norway = { lat: 59.9139, lng: 10.7522 };
             map = new google.maps.Map(document.getElementById('mapContainer'), {
                 zoom: 6,
-                center: norway,
-                mapTypeControl: false,
-                streetViewControl: false,
-                styles: [
-                    { elementType: "geometry", stylers: [{ color: "#2a2a2a" }] },
-                    { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a1a" }] },
-                    { elementType: "labels.text.fill", stylers: [{ color: "#C41E3A" }] },
-                    { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#C41E3A" }] },
-                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#3a3a3a" }] },
-                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#1a1a1a" }] }
-                ]
+                center: norway
             });
 
             marker = new google.maps.Marker({
@@ -469,30 +460,33 @@
 
             geocoder = new google.maps.Geocoder();
 
+            // Autocomplete for location input
+            const locationInput = document.getElementById('location');
+            autocomplete = new google.maps.places.Autocomplete(locationInput, {
+                componentRestrictions: { country: 'no' },
+                fields: ['formatted_address', 'geometry', 'name']
+            });
+
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                if (place.geometry) {
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(14);
+                    marker.setPosition(place.geometry.location);
+                    marker.setVisible(true);
+                    locationInput.value = place.formatted_address || place.name;
+                }
+            });
+
             marker.addListener('dragend', function() {
                 const position = marker.getPosition();
                 geocoder.geocode({ location: position }, function(results, status) {
                     if (status === 'OK' && results[0]) {
-                        document.getElementById('location').value = results[0].formatted_address;
+                        locationInput.value = results[0].formatted_address;
                     }
                 });
             });
         }
-
-        document.getElementById('location').addEventListener('blur', function() {
-            const address = this.value;
-            if (address && geocoder) {
-                geocoder.geocode({ address: address }, function(results, status) {
-                    if (status === 'OK' && results[0]) {
-                        const location = results[0].geometry.location;
-                        map.setCenter(location);
-                        map.setZoom(14);
-                        marker.setPosition(location);
-                        marker.setVisible(true);
-                    }
-                });
-            }
-        });
 
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
