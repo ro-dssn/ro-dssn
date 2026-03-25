@@ -704,6 +704,141 @@
             color: var(--dssn-red);
         }
 
+        /* LEVEL DETAILS MODAL */
+        .level-details-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .level-details-modal.show {
+            display: flex;
+        }
+
+        .level-details-content {
+            background: var(--dssn-gray);
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 900px;
+            width: 100%;
+            border: 2px solid var(--dssn-red);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .level-details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--dssn-red);
+            padding-bottom: 20px;
+        }
+
+        .level-details-title {
+            color: var(--dssn-red);
+            font-size: 2em;
+        }
+
+        .level-details-close {
+            background: var(--dssn-light-gray);
+            border: 2px solid var(--dssn-red);
+            color: var(--text-white);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .level-details-close:hover {
+            background: var(--dssn-red);
+        }
+
+        .level-stats-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .level-stat-box {
+            background: var(--dssn-light-gray);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .level-stat-box:hover {
+            border-color: var(--dssn-red);
+        }
+
+        .level-stat-label {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .level-stat-value {
+            color: var(--dssn-red);
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .level-matches-list {
+            margin-top: 20px;
+        }
+
+        .level-match-item {
+            background: var(--dssn-light-gray);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .level-match-item:hover {
+            border-color: var(--dssn-red);
+        }
+
+        @media (max-width: 768px) {
+            .level-stats-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .level-match-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .level-details-content {
+                padding: 25px 20px;
+            }
+
+            .level-details-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+        }
+
         @media (max-width: 768px) {
             .points-dashboard {
                 grid-template-columns: 1fr;
@@ -922,6 +1057,36 @@
             <div class="empty-state">
                 <h2>Kommer snart</h2>
                 <p>Profil-funksjonalitet er under utvikling.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEVEL DETAILS MODAL -->
+    <div id="levelDetailsModal" class="level-details-modal">
+        <div class="level-details-content">
+            <div class="level-details-header">
+                <h2 class="level-details-title" id="levelDetailsTitle">Level I - Detaljer</h2>
+                <button class="level-details-close" onclick="hideLevelDetails()">Lukk</button>
+            </div>
+
+            <div class="level-stats-summary">
+                <div class="level-stat-box">
+                    <div class="level-stat-label">Totale poeng</div>
+                    <div class="level-stat-value" id="levelDetailPoints">0</div>
+                </div>
+                <div class="level-stat-box">
+                    <div class="level-stat-label">Antall matches</div>
+                    <div class="level-stat-value" id="levelDetailCount">0</div>
+                </div>
+                <div class="level-stat-box">
+                    <div class="level-stat-label">Gjennomsnitt</div>
+                    <div class="level-stat-value" id="levelDetailAvg">0</div>
+                </div>
+            </div>
+
+            <h3 style="color: var(--dssn-red); margin-bottom: 15px;">Matches på dette nivået</h3>
+            <div id="levelMatchesList" class="level-matches-list">
+                <!-- Matches vil bli lagt til her dynamisk -->
             </div>
         </div>
     </div>
@@ -1480,12 +1645,132 @@
             }
         }
 
-        function showLevelDetails(level) {
-            alert(`Detaljert visning for Level ${level} kommer snart!`);
+        // LEVEL DETAILS FUNCTIONS
+        async function showLevelDetails(level) {
+            const year = document.getElementById('yearFilter').value;
+            
+            try {
+                let query = db.collection('matches')
+                    .where('createdBy', '==', currentUser.uid);
+                
+                if (year !== 'all') {
+                    const startDate = year + '-01-01';
+                    const endDate = year + '-12-31';
+                    query = query.where('startDate', '>=', startDate).where('startDate', '<=', endDate);
+                }
+                
+                const snapshot = await query.get();
+                
+                let levelMatches = [];
+                let totalPoints = 0;
+                
+                snapshot.forEach(doc => {
+                    const match = doc.data();
+                    const levelMatch = match.level.match(/\d+/);
+                    const matchLevel = levelMatch ? parseInt(levelMatch[0]) : 0;
+                    
+                    if (matchLevel === level) {
+                        levelMatches.push(match);
+                        totalPoints += match.levelPoints || 0;
+                    }
+                });
+                
+                // Update modal content
+                const levelNames = ['', 'I', 'II', 'III', 'IV', 'V'];
+                document.getElementById('levelDetailsTitle').textContent = `Level ${levelNames[level]} - Detaljer`;
+                document.getElementById('levelDetailPoints').textContent = totalPoints;
+                document.getElementById('levelDetailCount').textContent = levelMatches.length;
+                document.getElementById('levelDetailAvg').textContent = levelMatches.length > 0 ? 
+                    (totalPoints / levelMatches.length).toFixed(1) : '0';
+                
+                // Build matches list
+                const matchesList = document.getElementById('levelMatchesList');
+                if (levelMatches.length === 0) {
+                    matchesList.innerHTML = `
+                        <div class="empty-state">
+                            <p style="padding: 40px;">Ingen matches funnet på Level ${levelNames[level]}</p>
+                        </div>
+                    `;
+                } else {
+                    let html = '';
+                    levelMatches.forEach(match => {
+                        html += `
+                            <div class="level-match-item">
+                                <div class="history-date">${match.startDate}</div>
+                                <div>
+                                    <div class="history-match-name">${match.matchName}</div>
+                                    <div style="color: #888; font-size: 0.9em;">${match.discipline} • ${match.location}</div>
+                                </div>
+                                <div class="history-role">RM</div>
+                                <div class="history-points">+${match.levelPoints || 0}</div>
+                            </div>
+                        `;
+                    });
+                    matchesList.innerHTML = html;
+                }
+                
+                // Show modal
+                document.getElementById('levelDetailsModal').classList.add('show');
+                
+            } catch (error) {
+                console.error('Error loading level details:', error);
+                alert('Feil ved lasting av detaljer: ' + error.message);
+            }
         }
 
-        function exportPointsCard() {
-            alert('Excel-eksport av poengkort kommer snart!');
+        function hideLevelDetails() {
+            document.getElementById('levelDetailsModal').classList.remove('show');
+        }
+
+        async function exportPointsCard() {
+            const year = document.getElementById('yearFilter').value;
+            
+            try {
+                let query = db.collection('matches')
+                    .where('createdBy', '==', currentUser.uid);
+                
+                if (year !== 'all') {
+                    const startDate = year + '-01-01';
+                    const endDate = year + '-12-31';
+                    query = query.where('startDate', '>=', startDate).where('startDate', '<=', endDate);
+                }
+                
+                const snapshot = await query.get();
+                
+                // Prepare data for Excel
+                const data = [];
+                data.push(['Dato', 'Match', 'Disiplin', 'Level', 'Poeng', 'Lokasjon', 'Klubb']);
+                
+                snapshot.forEach(doc => {
+                    const match = doc.data();
+                    data.push([
+                        match.startDate,
+                        match.matchName,
+                        match.discipline,
+                        match.level,
+                        match.levelPoints || 0,
+                        match.location,
+                        match.affiliatedClub || ''
+                    ]);
+                });
+                
+                // Create workbook
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Poengkort');
+                
+                // Generate filename
+                const filename = year === 'all' ? 
+                    `Poengkort_Alle_År.xlsx` : 
+                    `Poengkort_${year}.xlsx`;
+                
+                // Download
+                XLSX.writeFile(wb, filename);
+                
+            } catch (error) {
+                console.error('Error exporting:', error);
+                alert('Feil ved eksport: ' + error.message);
+            }
         }
 
         async function editMatch(docId) {
