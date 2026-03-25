@@ -8,6 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCKhB_JbIRJdS0rXh0fhf0Ah1FkOa-h3A&libraries=places"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -131,6 +132,14 @@
             font-size: 1em;
             font-family: inherit;
         }
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
         .form-group textarea {
             min-height: 100px;
             resize: vertical;
@@ -237,10 +246,7 @@
             border-radius: 8px;
             margin-bottom: 20px;
             background: var(--dssn-light-gray);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #888;
+            border: 2px solid var(--dssn-red);
         }
     </style>
 </head>
@@ -337,34 +343,6 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="affiliatedClub">Arrangerende klubb</label>
-                        <input type="text" id="affiliatedClub">
-                    </div>
-                    <div class="form-group">
-                        <label for="region">Region *</label>
-                        <select id="region" required>
-                            <option value="">Velg region</option>
-                            <option value="Norge">Norge</option>
-                            <option value="Østlandet">Østlandet</option>
-                            <option value="Vestlandet">Vestlandet</option>
-                            <option value="Sørlandet">Sørlandet</option>
-                            <option value="Midt-Norge">Midt-Norge</option>
-                            <option value="Nord-Norge">Nord-Norge</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="location">Lokasjon (adresse) *</label>
-                    <input type="text" id="location" required placeholder="F.eks. Kongsberg Pistolklubb, Kongsberg">
-                </div>
-
-                <div id="mapContainer">
-                    Kart kommer snart
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
                         <label for="startDate">Start dato *</label>
                         <input type="date" id="startDate" required onchange="checkRegistrationDeadline()">
                     </div>
@@ -373,6 +351,18 @@
                         <input type="date" id="endDate" required>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label for="affiliatedClub">Arrangerende klubb</label>
+                    <input type="text" id="affiliatedClub">
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Lokasjon (adresse) *</label>
+                    <input type="text" id="location" required placeholder="F.eks. Kongsberg Pistolklubb, Kongsberg">
+                </div>
+
+                <div id="mapContainer"></div>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -396,19 +386,13 @@
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="localEntryfee">Lokale deltakere (antall)</label>
-                        <input type="number" id="localEntryfee" min="0" value="0">
-                    </div>
-                    <div class="form-group">
-                        <label for="usdEntryfee">Utenlandske deltakere (antall)</label>
-                        <input type="number" id="usdEntryfee" min="0" value="0">
-                    </div>
+                <div class="form-group">
+                    <label for="participants">Antall deltakere</label>
+                    <input type="number" id="participants" min="0" value="0">
                 </div>
 
                 <div class="form-group">
-                    <label for="matchWebUrl">Match URL (WinMSS/PractiScore)</label>
+                    <label for="matchWebUrl">Match URL</label>
                     <input type="url" id="matchWebUrl" placeholder="https://...">
                 </div>
 
@@ -446,6 +430,9 @@
         const db = firebase.firestore();
         let currentUser = null;
         let nextMatchId = 8000;
+        let map = null;
+        let marker = null;
+        let geocoder = null;
 
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
@@ -456,6 +443,55 @@
             document.getElementById('userEmail').textContent = user.email;
             await loadMatches();
             await getNextMatchId();
+        });
+
+        function initMap() {
+            const norway = { lat: 59.9139, lng: 10.7522 };
+            map = new google.maps.Map(document.getElementById('mapContainer'), {
+                zoom: 6,
+                center: norway,
+                mapTypeControl: false,
+                streetViewControl: false,
+                styles: [
+                    { elementType: "geometry", stylers: [{ color: "#2a2a2a" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a1a" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#C41E3A" }] },
+                    { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#C41E3A" }] },
+                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#3a3a3a" }] },
+                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#1a1a1a" }] }
+                ]
+            });
+
+            marker = new google.maps.Marker({
+                map: map,
+                draggable: true
+            });
+
+            geocoder = new google.maps.Geocoder();
+
+            marker.addListener('dragend', function() {
+                const position = marker.getPosition();
+                geocoder.geocode({ location: position }, function(results, status) {
+                    if (status === 'OK' && results[0]) {
+                        document.getElementById('location').value = results[0].formatted_address;
+                    }
+                });
+            });
+        }
+
+        document.getElementById('location').addEventListener('blur', function() {
+            const address = this.value;
+            if (address && geocoder) {
+                geocoder.geocode({ address: address }, function(results, status) {
+                    if (status === 'OK' && results[0]) {
+                        const location = results[0].geometry.location;
+                        map.setCenter(location);
+                        map.setZoom(14);
+                        marker.setPosition(location);
+                        marker.setVisible(true);
+                    }
+                });
+            }
         });
 
         function showTab(tabName) {
@@ -501,6 +537,12 @@
             document.getElementById('createMatchForm').reset();
             document.getElementById('createMatchAlert').classList.add('hidden');
             getNextMatchId();
+            
+            setTimeout(() => {
+                if (!map) {
+                    initMap();
+                }
+            }, 100);
         }
 
         function hideCreateMatch() {
@@ -550,6 +592,14 @@
             }
 
             try {
+                let lat = null;
+                let lng = null;
+                if (marker && marker.getVisible()) {
+                    const position = marker.getPosition();
+                    lat = position.lat();
+                    lng = position.lng();
+                }
+
                 const matchData = {
                     matchId: nextMatchId,
                     matchName: document.getElementById('matchName').value,
@@ -557,16 +607,16 @@
                     level: document.getElementById('level').value,
                     levelPoints: parseInt(document.getElementById('level').value.match(/\d+/)[0]),
                     affiliatedClub: document.getElementById('affiliatedClub').value || '',
-                    region: document.getElementById('region').value,
                     location: document.getElementById('location').value,
+                    locationLat: lat,
+                    locationLng: lng,
                     startDate: document.getElementById('startDate').value,
                     endDate: document.getElementById('endDate').value,
                     md: document.getElementById('md').value || '',
                     rm: document.getElementById('rm').value || '',
                     numStages: parseInt(document.getElementById('numStages').value) || 0,
                     minRounds: parseInt(document.getElementById('minRounds').value) || 0,
-                    localEntryfee: parseInt(document.getElementById('localEntryfee').value) || 0,
-                    usdEntryfee: parseInt(document.getElementById('usdEntryfee').value) || 0,
+                    participants: parseInt(document.getElementById('participants').value) || 0,
                     matchWebUrl: document.getElementById('matchWebUrl').value || '',
                     matchContact: document.getElementById('matchContact').value || '',
                     matchContactEmail: document.getElementById('matchContactEmail').value || '',
