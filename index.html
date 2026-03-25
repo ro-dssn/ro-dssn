@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSSN RO-portal</title>
+    <title>DSSN Instruktørportal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --dssn-red: #C41E3A;
-            --dssn-dark-red: #8B0000;
+            --dssn-yellow: #FFD700;
             --dssn-black: #1a1a1a;
             --dssn-gray: #2a2a2a;
             --dssn-light-gray: #3a3a3a;
@@ -32,14 +33,14 @@
         .container { max-width: 900px; margin: 0 auto; }
         .login-screen { text-align: center; padding: 40px 20px; }
         .login-screen img { max-width: 200px; height: auto; margin-bottom: 20px; }
-        .login-screen h1 { color: var(--dssn-red); font-size: 2.5em; margin-bottom: 10px; }
+        .login-screen h1 { color: var(--dssn-yellow); font-size: 2.5em; margin-bottom: 10px; }
         .login-box {
             background: var(--dssn-gray);
             padding: 40px;
             border-radius: 15px;
             margin: 40px auto;
             max-width: 400px;
-            box-shadow: 0 4px 20px rgba(196, 30, 58, 0.1);
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.1);
         }
         .form-group { margin-bottom: 20px; text-align: left; }
         .form-group label { display: block; margin-bottom: 8px; color: var(--text-gray); }
@@ -47,7 +48,7 @@
             width: 100%;
             padding: 12px;
             background: var(--dssn-light-gray);
-            border: 2px solid var(--dssn-red);
+            border: 2px solid var(--dssn-yellow);
             border-radius: 8px;
             color: var(--text-white);
             font-size: 1em;
@@ -55,8 +56,8 @@
         .btn {
             width: 100%;
             padding: 14px;
-            background: var(--dssn-red);
-            color: var(--text-white);
+            background: var(--dssn-yellow);
+            color: var(--dssn-black);
             border: none;
             border-radius: 8px;
             font-size: 1.1em;
@@ -64,11 +65,11 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        .btn:hover { background: var(--dssn-dark-red); }
+        .btn:hover { background: #ffd000; }
         .btn-secondary {
             background: var(--dssn-light-gray);
             color: #ffffff;
-            border: 2px solid var(--dssn-red);
+            border: 2px solid var(--dssn-yellow);
         }
         .btn-secondary:hover { background: var(--dssn-gray); }
         .alert { padding: 12px; border-radius: 8px; margin-bottom: 20px; }
@@ -78,9 +79,9 @@
             color: var(--success);
         }
         .alert-info {
-            background: rgba(196, 30, 58, 0.2);
-            border: 2px solid var(--dssn-red);
-            color: var(--dssn-red);
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid var(--dssn-yellow);
+            color: var(--dssn-yellow);
         }
         .alert-error {
             background: rgba(244, 67, 54, 0.2);
@@ -88,8 +89,94 @@
             color: var(--error);
         }
         .hidden { display: none; }
-        .gdpr-modal {
+        .dashboard { display: none; }
+        .dashboard.active { display: block; }
+        .user-info {
+            background: var(--dssn-gray);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info h2 { color: var(--dssn-yellow); margin-bottom: 5px; }
+        .logout-btn {
+            padding: 10px 20px;
+            background: var(--error);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: var(--dssn-gray);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-card h3 { 
+            color: var(--text-gray); 
+            font-size: 0.85em; 
+            margin-bottom: 10px; 
+            min-height: 2.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .value { color: var(--dssn-yellow); font-size: 2.2em; font-weight: 700; cursor: help; }
+        .activity-form {
+            background: var(--dssn-gray);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--dssn-light-gray);
+            border: 2px solid var(--dssn-yellow);
+            border-radius: 8px;
+            color: var(--text-white);
+            font-size: 1em;
+            box-sizing: border-box;
+            height: 48px;
+        }
+        input[type="date"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            height: 48px;
+        }
+        textarea { height: auto; min-height: 80px; resize: vertical; }
+        .activity-list {
+            background: var(--dssn-gray);
+            padding: 30px;
+            border-radius: 15px;
+        }
+        .activity-item {
+            background: var(--dssn-light-gray);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .activity-item h4 { color: var(--dssn-yellow); margin-bottom: 5px; }
+        .activity-item p { margin: 5px 0; color: var(--text-gray); }
+        .gdpr-modal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
@@ -100,32 +187,6 @@
             align-items: center;
             justify-content: center;
             overflow-y: auto;
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        .gdpr-modal.show {
-            visibility: visible;
-            opacity: 1;
-        }
-        .activation-modal {
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        .activation-modal.show {
-            visibility: visible;
-            opacity: 1;
         }
         .gdpr-content {
             background: var(--dssn-gray);
@@ -134,17 +195,17 @@
             max-width: 700px;
             width: 90%;
             margin: 20px;
-            border: 3px solid var(--dssn-red);
+            border: 3px solid var(--dssn-yellow);
             max-height: 90vh;
             overflow-y: auto;
         }
         .gdpr-content h2 {
-            color: var(--dssn-red);
+            color: var(--dssn-yellow);
             margin-bottom: 20px;
             font-size: 1.8em;
         }
         .gdpr-content h3 {
-            color: var(--dssn-red);
+            color: var(--dssn-yellow);
             margin-top: 20px;
             margin-bottom: 10px;
             font-size: 1.2em;
@@ -178,19 +239,35 @@
             font-size: 1.1em;
         }
         @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+            .user-info { 
+                flex-direction: column; 
+                gap: 15px;
+                align-items: flex-start;
+            }
+            .user-info > div:last-child {
+                width: 100%;
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
             .login-screen h1 { font-size: 1.8em; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 480px) {
             .login-screen h1 { font-size: 1.5em; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-card h3 { font-size: 0.8em; }
+            .value { font-size: 2em; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="loginScreen" class="login-screen">
-            <img src="RO-DSSN_NROI%20logo.png" alt="NROI Logo">
-            <h1>DSSN RO-portal</h1>
-            <p>National Range Officer Institute - Norway</p>
+            <img src="https://kurs-dssn.github.io/dssn-instruktor/DSSN%20logo.png" alt="DSSN Logo">
+            <h1>DSSN Instruktørportal</h1>
+            <p>Dynamisk Sportsskyting Norge - Aktivitetsregistrering</p>
             <div class="login-box">
                 <div id="loginAlert" class="alert alert-info hidden"></div>
                 <form id="loginForm" onsubmit="handleLogin(event)">
@@ -205,8 +282,8 @@
                     <button type="submit" class="btn">Logg inn</button>
                 </form>
                 <div style="text-align: center; margin-top: 20px;">
-                    <a href="/cdn-cgi/l/email-protection#5d382e2d6c1d392e2e33733332" style="color: #C41E3A; text-decoration: none; font-size: 0.9em;">
-                        Glemt passord? Kontakt oss: <span class="__cf_email__" data-cfemail="89ecfaf9b8c9edfafae7a7e7e6">[email&#160;protected]</span>
+                    <a id="forgotPasswordLink" href="#" style="color: #FFD700; text-decoration: none; font-size: 0.9em;">
+                        Glemt passord? Kontakt oss
                     </a>
                 </div>
                 <div style="text-align: center; margin-top: 15px;">
@@ -215,15 +292,12 @@
                     </button>
                 </div>
             </div>
-            <div style="text-align: center; color: #888; font-size: 0.9em; margin-top: 30px;">
-                Esp1 design 20&copy;26
-            </div>
         </div>
 
         <!-- Activation Modal -->
-        <div id="activationModal" class="activation-modal">
-            <div style="background: var(--dssn-gray); padding: 40px; border-radius: 15px; max-width: 500px; width: 90%; border: 2px solid var(--dssn-red);">
-                <h2 style="color: var(--dssn-red); margin-bottom: 20px;">Aktiver bruker</h2>
+        <div id="activationModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+            <div style="background: var(--dssn-gray); padding: 40px; border-radius: 15px; max-width: 500px; width: 90%; border: 2px solid var(--dssn-yellow);">
+                <h2 style="color: var(--dssn-yellow); margin-bottom: 20px;">Aktiver bruker</h2>
                 <div id="activationAlert" class="alert alert-info hidden"></div>
                 <form id="activationForm" onsubmit="activateUser(event)">
                     <div class="form-group">
@@ -237,7 +311,7 @@
                     <div class="form-group">
                         <label for="actPass1">Nytt passord:</label>
                         <input type="password" id="actPass1" name="new-password" autocomplete="new-password" required minlength="8">
-                        <div style="font-size: 0.8em; margin-top: 5px; color: #cccccc;">
+                        <div id="passReq" style="font-size: 0.8em; margin-top: 5px; color: #cccccc;">
                             Krav: Min. 8 tegn, inneholde tall og stor/liten bokstav
                         </div>
                     </div>
@@ -257,32 +331,34 @@
                 <h2>Personvern og samtykke</h2>
                 
                 <h3>Behandling av personopplysninger</h3>
-                <p>DSSN RO-portal behandler følgende personopplysninger om deg:</p>
+                <p>DSSN Instruktørportal behandler følgende personopplysninger om deg:</p>
                 
                 <p><strong>Grunnleggende informasjon:</strong></p>
                 <ul>
                     <li>Navn</li>
                     <li>E-postadresse</li>
                     <li>Klubbtilknytning</li>
-                    <li>Member ID</li>
+                    <li>Region</li>
+                    <li>Instruktørnummer</li>
                 </ul>
                 
                 <p><strong>Aktivitetsdata:</strong></p>
                 <ul>
-                    <li>Registrerte matches som RO/CRO/RM</li>
+                    <li>Registrerte kurs og treninger</li>
+                    <li>Datoer og steder for aktiviteter</li>
                     <li>Poengberegninger</li>
-                    <li>RO-status</li>
+                    <li>Instruktørstatus</li>
                 </ul>
                 
                 <h3>Formål og behandlingsgrunnlag</h3>
                 <p>Personopplysningene behandles for å:</p>
                 <ul>
-                    <li>Administrere og dokumentere Range Officer aktivitet i DSSN</li>
-                    <li>Opprettholde oversikt over RO-kvalifikasjoner</li>
-                    <li>Sikre etterlevelse av IROA krav til RO-status</li>
-                    <li>Generere poengkort og aktivitetsrapporter</li>
+                    <li>Administrere og dokumentere instruktøraktivitet i DSSN</li>
+                    <li>Opprettholde oversikt over instruktørers kvalifikasjoner</li>
+                    <li>Sikre etterlevelse av DSSNs krav til instruktørstatus</li>
+                    <li>Generere instruktørbevis og aktivitetsrapporter</li>
                 </ul>
-                <p>Behandlingsgrunnlaget er <strong>samtykke</strong> (GDPR art. 6(1)(a)) og <strong>oppfyllelse av avtale</strong> (GDPR art. 6(1)(b)) knyttet til ditt RO-verv i DSSN.</p>
+                <p>Behandlingsgrunnlaget er <strong>samtykke</strong> (GDPR art. 6(1)(a)) og <strong>oppfyllelse av avtale</strong> (GDPR art. 6(1)(b)) knyttet til ditt instruktørverv i DSSN.</p>
                 
                 <h3>Lagring og sikkerhet</h3>
                 <ul>
@@ -301,7 +377,7 @@
                     <li><strong>Trekke tilbake</strong> samtykke (dette vil medføre at du ikke lenger kan bruke portalen)</li>
                     <li><strong>Klage</strong> til Datatilsynet dersom du mener behandlingen er ulovlig</li>
                 </ul>
-                <p>For å utøve dine rettigheter, kontakt: <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e5809695d4a58196968bcb8b8a">[email&#160;protected]</a></strong></p>
+                <p>For å utøve dine rettigheter, kontakt: <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a2c9d7d0d1e2c6d1d1cc8ccccd">[email&#160;protected]</a></strong></p>
                 
                 <h3>Samtykke</h3>
                 <p>Ved å akseptere nedenfor samtykker du til behandling av dine personopplysninger som beskrevet over.</p>
@@ -322,228 +398,983 @@
                 </p>
             </div>
         </div>
+
+        <div id="dashboard" class="dashboard">
+            <div style="background: rgba(255, 215, 0, 0.1); padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #FFD700;">
+                <h3 onclick="toggleInstructions()" style="color: #FFD700; margin: 0; cursor: pointer; user-select: none;">
+                    📋 Slik bruker du instruktørportalen <span id="toggleIcon">▶</span>
+                </h3>
+                <div id="instructionsContent" style="display: none; margin-top: 15px;">
+                    <p style="margin-bottom: 10px; line-height: 1.6;">Velkommen til DSSN Instruktørportal! Her registrerer du dine aktiviteter som instruktør for å opprettholde din instruktørstatus.</p>
+                    <p style="margin-bottom: 10px; line-height: 1.6;"><strong>Krav:</strong> Du må oppnå minimum <strong>6 poeng per kalenderår</strong> for å beholde instruktørstatus.</p>
+                    <p style="margin-bottom: 10px; line-height: 1.6;"><strong>Poenggivende aktiviteter:</strong></p>
+                    <ul style="margin-left: 20px; margin-bottom: 10px; line-height: 1.8;">
+                        <li><strong>Godkjenningskurs</strong> – 3 poeng</li>
+                        <li><strong>Sikkerhetskurs</strong> – 3 poeng</li>
+                        <li><strong>Organisert trening</strong> – 1 poeng</li>
+                        <li><strong>Deltakelse på instruktørsamling</strong> – 1 poeng</li>
+                    </ul>
+                    <p style="line-height: 1.6;"><strong>OBS:</strong> Aktiviteter kan kun registreres inntil 2 måneder tilbake i tid. Registrer derfor løpende!</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div>
+                    <h2 id="userName">Navn</h2>
+                    <p id="userEmail">e-post</p>
+                    <p id="userInfo">Klubb | Region</p>
+                    <p id="userInstruktorNum" style="color: #cccccc; font-size: 0.9em;">-</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="downloadInstruktorCard()" style="background: #4CAF50; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1em;">🎫 Instruktør</button>
+                    <button class="logout-btn" onclick="logout()" style="font-size: 1.1em;">Logg ut</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Totalt poeng i år</h3>
+                    <div class="value" id="totalPoints">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Totalt poeng (alle år)</h3>
+                    <div class="value" id="totalPointsAllTime">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Antall kurs</h3>
+                    <div class="value" id="totalCourses">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Antall treninger</h3>
+                    <div class="value" id="totalTrainings">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Instruktørstatus</h3>
+                    <div class="value" id="approvalStatus" style="font-size: 1.5em;">✅</div>
+                </div>
+            </div>
+            <form class="activity-form" onsubmit="registerActivity(event)">
+                <h3 style="color: var(--dssn-yellow); margin-bottom: 20px;">Registrer ny aktivitet</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="activityDate">Dato:</label>
+                        <input type="date" id="activityDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="activityType">Type aktivitet:</label>
+                        <select id="activityType" required onchange="updatePoints()">
+                            <option value="">-- Velg type --</option>
+                            <option value="Godkjenningskurs" data-points="3">Godkjenningskurs - 3p</option>
+                            <option value="Sikkerhetskurs" data-points="3">Sikkerhetskurs - 3p</option>
+                            <option value="Organisert trening" data-points="1">Organisert trening - 1p</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="activityDescription">Beskrivelse:</label>
+                    <textarea id="activityDescription" placeholder="Beskriv kort hvilke kurs du har gjennomført, eller oppgi hvem som deltok på treningen... (minimum 10 tegn)" required minlength="10"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="activityLocation">Sted:</label>
+                        <input type="text" id="activityLocation" placeholder="F.eks. Tromsø" required minlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="activityParticipants">Antall deltakere:</label>
+                        <input type="number" id="activityParticipants" min="1" required>
+                    </div>
+                </div>
+                <p style="color: var(--text-gray); margin-bottom: 10px;">Poeng: <span id="currentPoints" style="color: var(--dssn-yellow); font-weight: bold;">0</span></p>
+                <button type="submit" class="btn">Registrer aktivitet</button>
+            </form>
+            <!-- Mine kurs - fane -->
+            <div class="activity-list" style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,193,7,0.1); border-radius: 8px; cursor: pointer;" onclick="toggleSection('coursesSection')">
+                    <h3 style="color: var(--dssn-yellow); margin: 0;">▶ Mine kurs</h3>
+                    <button onclick="event.stopPropagation(); downloadMyActivities('courses')" class="btn" style="width: auto; padding: 10px 20px; font-size: 0.9em;">
+                        📥 Last ned Excel
+                    </button>
+                </div>
+                <div id="coursesSection" style="display: none; padding-top: 20px;">
+                    <div id="coursesListContent">
+                        <p style="color: var(--text-gray);">Ingen kurs registrert ennå.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mine treninger - fane -->
+            <div class="activity-list">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,193,7,0.1); border-radius: 8px; cursor: pointer;" onclick="toggleSection('trainingsSection')">
+                    <h3 style="color: var(--dssn-yellow); margin: 0;">▶ Mine treninger</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="event.stopPropagation(); downloadMyActivities('trainings')" class="btn" style="width: auto; padding: 10px 20px; font-size: 0.9em;">
+                            📥 Last ned Excel
+                        </button>
+                    </div>
+                </div>
+                <div id="trainingsSection" style="display: none; padding-top: 20px;">
+                    <div id="trainingsListContent">
+                        <p style="color: var(--text-gray);">Ingen treninger registrert ennå.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // Firebase Configuration
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         const firebaseConfig = {
-            apiKey: "AIzaSyC0OvKlWDriZxE_MhM-BADXDDirjbEQU0w",
-            authDomain: "dssn-ro.firebaseapp.com",
-            projectId: "dssn-ro",
-            storageBucket: "dssn-ro.firebasestorage.app",
-            messagingSenderId: "412595017547",
-            appId: "1:412595017547:web:e1e7fbcc4e99077bae7ace",
-            measurementId: "G-F0YKJVHW2E"
+            apiKey: "AIzaSyAvDeuKD5CwxTrYRMyWlhN5zPNyMZFPdCA",
+            authDomain: "dssn-instruktor.firebaseapp.com",
+            projectId: "dssn-instruktor",
+            storageBucket: "dssn-instruktor.firebasestorage.app",
+            messagingSenderId: "215885205974",
+            appId: "1:215885205974:web:c736b46ec8e6c67d7a1477"
         };
-
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const db = firebase.firestore();
+        const auth = firebase.auth();
+        let instructors = [];
+        let currentUser = null;
+        let currentAuthUser = null;
+        let activities = [];
 
-        // Check if already logged in
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                // Check GDPR consent
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if (userDoc.exists() && userDoc.data().gdprConsent) {
-                    window.location.href = 'portal.html';
-                } else {
-                    showGDPRModal();
-                }
+        let loginAttempts = 0;
+        let loginBlockedUntil = null;
+
+        let sessionTimeout = null;
+        const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function showAlert(elementId, message, type) {
+            const alert = document.getElementById(elementId);
+            alert.textContent = message;
+            alert.className = 'alert alert-' + type;
+            alert.classList.remove('hidden');
+            if (type === 'success') {
+                setTimeout(() => alert.classList.add('hidden'), 3000);
             }
-        });
+        }
 
-        // Login Handler
-        async function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
+        async function loadInstructors() {
             try {
-                // Check if email is in ro.xlsx whitelist
-                const isApproved = await checkROWhitelist(email);
-                if (!isApproved) {
-                    showAlert('Du er ikke registrert som godkjent Range Officer.', 'error', 'loginAlert');
+                console.log('Loading instructors...');
+                const response = await fetch('https://docs.google.com/spreadsheets/d/1QVMDnoy68nn-e-4NEd_59wqbFfkP4Nvx/export?format=xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const rawData = XLSX.utils.sheet_to_json(sheet, {header: 1});
+                let headerRowIndex = -1;
+                for (let i = 0; i < rawData.length; i++) {
+                    if (rawData[i][0] === '#' && rawData[i][1] === 'E-postadresse') {
+                        headerRowIndex = i;
+                        break;
+                    }
+                }
+                if (headerRowIndex === -1) {
+                    showAlert('loginAlert', 'Feil i instruktørdata. Kontakt kurs@dssn.no', 'error');
                     return;
                 }
-                
-                // Sign in with Firebase
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Check GDPR consent
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if (!userDoc.exists() || !userDoc.data().gdprConsent) {
-                    showGDPRModal();
-                } else {
-                    // Update last login
-                    await db.collection('users').doc(user.uid).set({
-                        lastLogin: new Date().toISOString()
-                    }, { merge: true });
-                    
-                    window.location.href = 'portal.html';
+                instructors = [];
+                for (let i = headerRowIndex + 1; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    if (!row[1] || !row[2]) continue;
+                    const getRegion = (r) => {
+                        if (r[5] === 1) return 'Nord';
+                        if (r[6] === 1) return 'Midt';
+                        if (r[7] === 1) return 'Vest';
+                        if (r[8] === 1) return 'Sør';
+                        if (r[9] === 1) return 'Øst';
+                        return '-';
+                    };
+                    instructors.push({
+                        InstruktørID: 'INSTR' + String(row[0]).padStart(3, '0'),
+                        Nummer: row[0],
+                        Epost: row[1],
+                        Fornavn: row[2],
+                        Etternavn: row[3],
+                        Navn: row[2] + ' ' + row[3],
+                        Klubb: row[4],
+                        Region: getRegion(row)
+                    });
                 }
+                console.log('Loaded ' + instructors.length + ' instructors');
+            } catch (error) {
+                console.error('Load error:', error);
+                showAlert('loginAlert', 'Kunne ikke laste data. Prøv igjen.', 'error');
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            if (loginBlockedUntil && new Date() < loginBlockedUntil) {
+                const remainingSeconds = Math.ceil((loginBlockedUntil - new Date()) / 1000);
+                showAlert('loginAlert', `For mange forsøk. Prøv igjen om ${remainingSeconds} sekunder.`, 'error');
+                return;
+            }
+            
+            if (!instructors || instructors.length === 0) {
+                showAlert('loginAlert', 'Vennligst vent mens data laster...', 'info');
+                return;
+            }
+            
+            const email = document.getElementById('loginEmail').value.toLowerCase().trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const instructor = instructors.find(i => i.Epost.toLowerCase() === email);
+            
+            if (!instructor) {
+                loginAttempts++;
+                if (loginAttempts >= 5) {
+                    loginBlockedUntil = new Date(new Date().getTime() + 5 * 60 * 1000);
+                    showAlert('loginAlert', 'For mange mislykkede forsøk. Prøv igjen om 5 minutter.', 'error');
+                } else {
+                    showAlert('loginAlert', 'Feil e-postadresse eller passord', 'error');
+                }
+                return;
+            }
+            
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                
+                loginAttempts = 0;
+                loginBlockedUntil = null;
+                currentAuthUser = userCredential.user;
+                currentUser = instructor;
+                completeLogin();
                 
             } catch (error) {
                 console.error('Login error:', error);
-                let errorMessage = 'Innlogging feilet. ';
+                loginAttempts++;
                 
-                switch (error.code) {
-                    case 'auth/invalid-credential':
-                    case 'auth/wrong-password':
-                    case 'auth/user-not-found':
-                        errorMessage += 'Feil e-post eller passord.';
-                        break;
-                    default:
-                        errorMessage += error.message;
+                if (loginAttempts >= 5) {
+                    loginBlockedUntil = new Date(new Date().getTime() + 5 * 60 * 1000);
+                    showAlert('loginAlert', 'For mange mislykkede forsøk. Prøv igjen om 5 minutter.', 'error');
+                } else {
+                    showAlert('loginAlert', 'Feil e-postadresse eller passord', 'error');
                 }
-                
-                showAlert(errorMessage, 'error', 'loginAlert');
             }
         }
 
-        // Load and check ro.xlsx whitelist
-        async function checkROWhitelist(email) {
-            try {
-                const response = await fetch('https://ro-dssn.github.io/ro-dssn/ro.xlsx');
-                const blob = await response.blob();
-                const arrayBuffer = await blob.arrayBuffer();
-                
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const data = XLSX.utils.sheet_to_json(firstSheet);
-                
-                const normalizedEmail = email.toLowerCase().trim();
-                
-                return data.some(row => {
-                    const rowEmail = (row.email || row.Email || row['E-mail'] || '').toLowerCase().trim();
-                    return rowEmail === normalizedEmail;
-                });
-                
-            } catch (error) {
-                console.error('Failed to load RO whitelist:', error);
-                return false;
-            }
-        }
-
-        // Activation Functions
         function showActivation() {
-            console.log('showActivation called');
-            const modal = document.getElementById('activationModal');
-            console.log('Modal element:', modal);
-            if (modal) {
-                modal.classList.add('show');
-                console.log('Added show class, classList:', modal.classList);
-            } else {
-                console.error('activationModal not found!');
-            }
+            document.getElementById('activationModal').style.display = 'flex';
         }
 
         function hideActivation() {
-            const modal = document.getElementById('activationModal');
-            modal.classList.remove('show');
+            document.getElementById('activationModal').style.display = 'none';
             document.getElementById('activationForm').reset();
-        }
             document.getElementById('activationAlert').classList.add('hidden');
         }
 
         async function activateUser(event) {
             event.preventDefault();
-            const email = document.getElementById('actEmail').value.trim();
+            
+            const email = document.getElementById('actEmail').value.toLowerCase().trim();
             const code = document.getElementById('actCode').value.trim();
-            const pass1 = document.getElementById('actPass1').value;
-            const pass2 = document.getElementById('actPass2').value;
-            
-            // Validate passwords
+            const pass1 = document.getElementById('actPass1').value.trim();
+            const pass2 = document.getElementById('actPass2').value.trim();
+
             if (pass1 !== pass2) {
-                showAlert('Passordene er ikke like', 'error', 'activationAlert');
+                showAlert('activationAlert', 'Passordene matcher ikke', 'error');
                 return;
             }
-            
-            if (pass1.length < 8) {
-                showAlert('Passord må være minst 8 tegn', 'error', 'activationAlert');
+
+            const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+            if (!passRegex.test(pass1)) {
+                showAlert('activationAlert', 'Passordet oppfyller ikke kravene', 'error');
                 return;
             }
-            
-            if (!/\d/.test(pass1) || !/[a-z]/.test(pass1) || !/[A-Z]/.test(pass1)) {
-                showAlert('Passord må inneholde tall og både store og små bokstaver', 'error', 'activationAlert');
+
+            const instructor = instructors.find(i => i.Epost.toLowerCase() === email);
+            if (!instructor) {
+                showAlert('activationAlert', 'E-postadressen finnes ikke i databasen', 'error');
                 return;
             }
-            
+
             try {
-                // Check activation code in Firestore
-                const codesSnapshot = await db.collection('activation_codes')
-                    .where('code', '==', code)
-                    .where('email', '==', email)
-                    .where('used', '==', false)
-                    .get();
+                const passwordDoc = await db.collection('passwords').doc(email).get();
                 
-                if (codesSnapshot.empty) {
-                    showAlert('Ugyldig eller allerede brukt aktiveringskode', 'error', 'activationAlert');
+                if (!passwordDoc.exists) {
+                    showAlert('activationAlert', 'Ingen aktiverings-kode funnet. Kontakt admin.', 'error');
                     return;
                 }
-                
-                // Check if in ro.xlsx
-                const isApproved = await checkROWhitelist(email);
-                if (!isApproved) {
-                    showAlert('E-postadressen er ikke registrert som godkjent RO', 'error', 'activationAlert');
+
+                const data = passwordDoc.data();
+                if (data.password) {
+                    showAlert('activationAlert', 'Bruker allerede aktivert. Bruk vanlig innlogging.', 'error');
                     return;
                 }
-                
-                // Create Firebase user
-                const userCredential = await auth.createUserWithEmailAndPassword(email, pass1);
-                const user = userCredential.user;
-                
-                // Create user profile
-                await db.collection('users').doc(user.uid).set({
-                    email: user.email,
-                    role: 'RO',
-                    createdAt: new Date().toISOString(),
-                    gdprConsent: false
+
+                if (data.activationCode !== code) {
+                    showAlert('activationAlert', 'Feil aktiverings-kode', 'error');
+                    return;
+                }
+
+                let userCredential;
+                try {
+                    userCredential = await auth.createUserWithEmailAndPassword(email, pass1);
+                } catch (authError) {
+                    if (authError.code === 'auth/email-already-in-use') {
+                        try {
+                            userCredential = await auth.signInWithEmailAndPassword(email, pass1);
+                        } catch (loginError) {
+                            showAlert('activationAlert', 'E-postadressen er allerede registrert med et annet passord. Bruk vanlig innlogging eller kontakt admin.', 'error');
+                            return;
+                        }
+                    } else {
+                        throw authError;
+                    }
+                }
+
+                const hashedPassword = CryptoJS.SHA256(pass1).toString();
+                await db.collection('passwords').doc(email).update({
+                    password: hashedPassword,
+                    activationCode: firebase.firestore.FieldValue.delete(),
+                    activated: firebase.firestore.FieldValue.serverTimestamp(),
+                    firebaseUid: userCredential.user.uid
                 });
+
+                currentAuthUser = userCredential.user;
+                currentUser = instructor;
+                hideActivation();
                 
-                showAlert('Bruker aktivert! Du vil nå bli logget inn...', 'success', 'activationAlert');
-                
-                setTimeout(() => {
-                    hideActivation();
-                    showGDPRModal();
-                }, 2000);
-                
+                showGDPRModal();
+
             } catch (error) {
                 console.error('Activation error:', error);
-                showAlert('Aktivering feilet: ' + error.message, 'error', 'activationAlert');
+                showAlert('activationAlert', 'Feil ved aktivering. Prøv igjen.', 'error');
             }
         }
 
-        // GDPR Functions
+        async function completeLogin() {
+            const gdprAccepted = await checkGDPRConsent(currentUser.Epost);
+            if (!gdprAccepted) {
+                showGDPRModal();
+                return;
+            }
+            
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            document.getElementById('userName').textContent = currentUser.Navn;
+            document.getElementById('userEmail').textContent = currentUser.Epost;
+            document.getElementById('userInfo').textContent = (currentUser.Klubb || '-') + ' | ' + currentUser.Region;
+            document.getElementById('userInstruktorNum').textContent = 'Instruktørnummer: ' + String(currentUser.Nummer).padStart(3, '0');
+            setDateLimits();
+            loadActivities();
+            startSessionMonitoring();
+        }
+
+        function setDateLimits() {
+            const dateInput = document.getElementById('activityDate');
+            const today = new Date();
+            
+            const maxDate = new Date(today);
+            maxDate.setDate(today.getDate() + 7);
+            
+            const minDate = new Date(today);
+            minDate.setMonth(today.getMonth() - 2);
+            
+            dateInput.max = maxDate.toISOString().split('T')[0];
+            dateInput.min = minDate.toISOString().split('T')[0];
+            dateInput.value = today.toISOString().split('T')[0];
+        }
+
+        async function logout() {
+            try {
+                await auth.signOut();
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            currentUser = null;
+            currentAuthUser = null;
+            activities = [];
+            clearTimeout(sessionTimeout);
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('loginForm').reset();
+        }
+
+        function resetSessionTimeout() {
+            clearTimeout(sessionTimeout);
+            if (currentUser) {
+                sessionTimeout = setTimeout(() => {
+                    alert('Du har blitt logget ut på grunn av inaktivitet.');
+                    logout();
+                }, SESSION_TIMEOUT_MS);
+            }
+        }
+
+        function startSessionMonitoring() {
+            ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+                document.addEventListener(event, resetSessionTimeout, true);
+            });
+            resetSessionTimeout();
+        }
+
+        function emailToDocId(email) {
+            return email.toLowerCase().trim()
+                .replace(/\//g, '_')
+                .replace(/\\/g, '_')
+                .replace(/\./g, '_')
+                .replace(/#/g, '_')
+                .replace(/\$/g, '_')
+                .replace(/\[/g, '_')
+                .replace(/\]/g, '_');
+        }
+        
+        async function checkGDPRConsent(email) {
+            try {
+                const docId = emailToDocId(email);
+                const gdprDoc = await db.collection('gdpr_consent').doc(docId).get();
+                if (gdprDoc.exists) {
+                    return gdprDoc.data().accepted === true;
+                }
+                return false;
+            } catch (error) {
+                console.error('GDPR check error:', error);
+                return false;
+            }
+        }
+
         function showGDPRModal() {
-            document.getElementById('gdprModal').classList.add('show');
+            document.getElementById('gdprModal').style.display = 'flex';
+            document.getElementById('loginScreen').style.display = 'none';
         }
 
-        document.getElementById('gdprAcceptCheckbox').addEventListener('change', function() {
-            const btn = document.getElementById('gdprAcceptBtn');
-            if (this.checked) {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            } else {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-            }
-        });
+        let gdprCheckboxInitialized = false;
+        function initGDPRCheckbox() {
+            if (gdprCheckboxInitialized) return;
+            
+            document.getElementById('gdprAcceptCheckbox').addEventListener('change', function() {
+                const btn = document.getElementById('gdprAcceptBtn');
+                if (this.checked) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                } else {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                }
+            });
+            gdprCheckboxInitialized = true;
+        }
 
         async function acceptGDPR() {
-            const user = auth.currentUser;
-            if (!user) return;
+            const checkbox = document.getElementById('gdprAcceptCheckbox');
+            if (!checkbox.checked) {
+                alert('Du må huke av for å akseptere personvernerklæringen.');
+                return;
+            }
+
+            try {
+                const docId = emailToDocId(currentUser.Epost);
+                await db.collection('gdpr_consent').doc(docId).set({
+                    accepted: true,
+                    acceptedDate: new Date().toISOString(),
+                    email: currentUser.Epost,
+                    name: currentUser.Navn
+                });
+
+                document.getElementById('gdprModal').style.display = 'none';
+                document.getElementById('dashboard').classList.add('active');
+                document.getElementById('userName').textContent = currentUser.Navn;
+                document.getElementById('userEmail').textContent = currentUser.Epost;
+                document.getElementById('userInfo').textContent = (currentUser.Klubb || '-') + ' | ' + currentUser.Region;
+                document.getElementById('userInstruktorNum').textContent = 'Instruktørnummer: ' + String(currentUser.Nummer).padStart(3, '0');
+                setDateLimits();
+                loadActivities();
+                startSessionMonitoring();
+            } catch (error) {
+                console.error('GDPR save error:', error);
+                alert('Feil ved lagring av samtykke. Prøv igjen.');
+            }
+        }
+
+        async function loadActivities() {
+            try {
+                const snapshot = await db.collection('activities').where('InstruktørID', '==', currentUser.InstruktørID).get();
+                activities = [];
+                snapshot.forEach(doc => {
+                    activities.push({ id: doc.id, ...doc.data() });
+                });
+                updateStats();
+                displayActivities();
+            } catch (error) {
+                console.error('Load activities error:', error);
+            }
+        }
+
+        function updateStats() {
+            const currentYear = new Date().getFullYear();
+            const lastYear = currentYear - 1;
+            
+            const yearActivities = activities.filter(a => new Date(a.Dato).getFullYear() === currentYear);
+            const lastYearActivities = activities.filter(a => new Date(a.Dato).getFullYear() === lastYear);
+            
+            const totalPoints = yearActivities.reduce((sum, a) => sum + (a.Poeng || 0), 0);
+            const lastYearPoints = lastYearActivities.reduce((sum, a) => sum + (a.Poeng || 0), 0);
+            const totalPointsAllTime = activities.reduce((sum, a) => sum + (a.Poeng || 0), 0);
+            const totalCourses = yearActivities.filter(a => a.Type === 'Godkjenningskurs' || a.Type === 'Sikkerhetskurs').length;
+            const totalTrainings = yearActivities.filter(a => a.Type === 'Organisert trening').length;
+            
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('totalPointsAllTime').textContent = totalPointsAllTime;
+            document.getElementById('totalCourses').textContent = totalCourses;
+            document.getElementById('totalTrainings').textContent = totalTrainings;
+            
+            const approvalDiv = document.getElementById('approvalStatus');
+            const isActive = lastYearPoints >= 6 || totalPoints >= 6;
+            const pointsNeeded = Math.max(0, 6 - totalPoints);
+            
+            const messages = {
+                0: '🎉 Gratulerer! Du har oppnådd godkjent instruktørstatus for i år! Fortsett det gode arbeidet!',
+                1: 'Du mangler kun ett poeng! Hva med å arrangere en organisert trening i klubben? Dette sikrer at du får beholde instruktørstatusen din, og dine medskyttere i klubben får en kvalitetstrening med godkjent instruktør.',
+                2: 'Du mangler to poeng. Kjør et sikkerhetskurs eller godkjenningskurs for å nå målet, eller to organiserte treninger.',
+                3: 'Du mangler tre poeng. Ett sikkerhetskurs eller godkjenningskurs setter deg halvveis! Fortsett det gode arbeidet.',
+                4: 'Du mangler fire poeng. To kurs eller fire organiserte treninger, så er du i mål!',
+                5: 'Du mangler fem poeng. Kom i gang! Kombiner kurs og organiserte treninger for å nå seks poeng.',
+                6: 'Du har ikke registrert noen aktiviteter ennå. Registrer dine kurs og treninger for å opprettholde instruktørstatusen. Du trenger seks poeng i kalenderåret.'
+            };
+            
+            if (isActive) {
+                approvalDiv.textContent = 'OK';
+                approvalDiv.style.color = '#4CAF50';
+                if (totalPoints >= 6) {
+                    approvalDiv.title = `Godkjent! Du har ${totalPoints} poeng i år.`;
+                } else if (lastYearPoints >= 6) {
+                    approvalDiv.title = `Godkjent fra ${lastYear} (${lastYearPoints}p). Du er godkjent til årsskiftet. Du har ${totalPoints} poeng i år - trenger ${pointsNeeded} til for å sikre status neste år.`;
+                }
+            } else {
+                approvalDiv.textContent = 'IKKE GODKJENT';
+                approvalDiv.style.color = '#f44336';
+                approvalDiv.title = totalPoints > 0 ? messages[pointsNeeded] : messages[6];
+            }
+            approvalDiv.style.fontSize = '2.2em';
+            approvalDiv.style.fontWeight = '700';
+        }
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const header = section.previousElementSibling;
+            const arrow = header.querySelector('h3');
+            
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                arrow.textContent = arrow.textContent.replace('▶', '▼');
+            } else {
+                section.style.display = 'none';
+                arrow.textContent = arrow.textContent.replace('▼', '▶');
+            }
+        }
+
+        function displayActivities() {
+            const courses = activities.filter(a => a.Type !== 'Organisert trening');
+            const trainings = activities.filter(a => a.Type === 'Organisert trening');
+            
+            const coursesContainer = document.getElementById('coursesListContent');
+            if (courses.length === 0) {
+                coursesContainer.innerHTML = '<p style="color: var(--text-gray);">Ingen kurs registrert ennå.</p>';
+            } else {
+                const sortedCourses = courses.slice().sort((a, b) => new Date(b.Dato) - new Date(a.Dato));
+                const now = new Date();
+                coursesContainer.innerHTML = sortedCourses.map(a => {
+                    const createdAt = a.CreatedAt ? (a.CreatedAt.toDate ? a.CreatedAt.toDate() : new Date(a.CreatedAt)) : null;
+                    const hoursSinceCreation = createdAt ? (now - createdAt) / (1000 * 60 * 60) : 999;
+                    const canEdit = hoursSinceCreation <= 48;
+                    
+                    let buttonsHtml = '';
+                    if (canEdit && a.id) {
+                        buttonsHtml = '<div style="margin-top: 10px; display: flex; gap: 10px;">' +
+                            '<button onclick="editActivity(\'' + a.id + '\')" style="background: #FFA500; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">✏️ Rediger</button>' +
+                            '<button onclick="deleteActivity(\'' + a.id + '\')" style="background: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">🗑️ Slett</button>' +
+                            '</div>';
+                    }
+                    
+                    return '<div class="activity-item">' +
+                        '<h4>' + escapeHtml(a.Type) + ' - ' + a.Poeng + 'p</h4>' +
+                        '<p><strong>Dato:</strong> ' + new Date(a.Dato).toLocaleDateString('no-NO') + '</p>' +
+                        '<p><strong>Sted:</strong> ' + escapeHtml(a.Sted) + '</p>' +
+                        '<p><strong>Deltakere:</strong> ' + parseInt(a.AntallDeltakere) + '</p>' +
+                        '<p><strong>Beskrivelse:</strong> ' + escapeHtml(a.Beskrivelse) + '</p>' +
+                        buttonsHtml +
+                        '</div>';
+                }).join('');
+            }
+            
+            const trainingsContainer = document.getElementById('trainingsListContent');
+            if (trainings.length === 0) {
+                trainingsContainer.innerHTML = '<p style="color: var(--text-gray);">Ingen treninger registrert ennå.</p>';
+            } else {
+                const sortedTrainings = trainings.slice().sort((a, b) => new Date(b.Dato) - new Date(a.Dato));
+                const now = new Date();
+                trainingsContainer.innerHTML = sortedTrainings.map(a => {
+                    const createdAt = a.CreatedAt ? (a.CreatedAt.toDate ? a.CreatedAt.toDate() : new Date(a.CreatedAt)) : null;
+                    const hoursSinceCreation = createdAt ? (now - createdAt) / (1000 * 60 * 60) : 999;
+                    const canEdit = hoursSinceCreation <= 48;
+                    
+                    let buttonsHtml = '';
+                    if (canEdit && a.id) {
+                        buttonsHtml = '<div style="margin-top: 10px; display: flex; gap: 10px;">' +
+                            '<button onclick="editActivity(\'' + a.id + '\')" style="background: #FFA500; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">✏️ Rediger</button>' +
+                            '<button onclick="deleteActivity(\'' + a.id + '\')" style="background: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">🗑️ Slett</button>' +
+                            '</div>';
+                    }
+                    
+                    return '<div class="activity-item">' +
+                        '<h4>' + escapeHtml(a.Type) + ' - ' + a.Poeng + 'p</h4>' +
+                        '<p><strong>Dato:</strong> ' + new Date(a.Dato).toLocaleDateString('no-NO') + '</p>' +
+                        '<p><strong>Sted:</strong> ' + escapeHtml(a.Sted) + '</p>' +
+                        '<p><strong>Deltakere:</strong> ' + parseInt(a.AntallDeltakere) + '</p>' +
+                        '<p><strong>Beskrivelse:</strong> ' + escapeHtml(a.Beskrivelse) + '</p>' +
+                        buttonsHtml +
+                        '</div>';
+                }).join('');
+            }
+        }
+
+        async function editActivity(activityId) {
+            const activity = activities.find(a => a.id === activityId);
+            if (!activity) {
+                alert('Fant ikke aktiviteten');
+                return;
+            }
+            
+            document.getElementById('activityType').value = activity.Type;
+            document.getElementById('activityDate').value = activity.Dato;
+            document.getElementById('activityDescription').value = activity.Beskrivelse;
+            document.getElementById('activityLocation').value = activity.Sted;
+            document.getElementById('activityParticipants').value = activity.AntallDeltakere;
+            updatePoints();
+            
+            const form = document.querySelector('.activity-form');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.textContent = '💾 Oppdater aktivitet';
+            submitBtn.style.background = '#FFA500';
+            
+            form.dataset.editingId = activityId;
+            
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function deleteActivity(activityId) {
+            if (!confirm('Er du sikker på at du vil slette denne aktiviteten?')) {
+                return;
+            }
             
             try {
-                await db.collection('users').doc(user.uid).set({
-                    gdprConsent: true,
-                    gdprConsentDate: new Date().toISOString()
-                }, { merge: true });
-                
-                window.location.href = 'portal.html';
-                
+                await db.collection('activities').doc(activityId).delete();
+                alert('✅ Aktivitet slettet!');
+                await loadActivities();
             } catch (error) {
-                console.error('GDPR consent error:', error);
-                alert('Feil ved lagring av samtykke: ' + error.message);
-  
+                console.error('Delete error:', error);
+                alert('❌ Feil ved sletting. Prøv igjen.');
+            }
+        }
+
+        function updatePoints() {
+            const select = document.getElementById('activityType');
+            const points = select.options[select.selectedIndex]?.getAttribute('data-points') || 0;
+            document.getElementById('currentPoints').textContent = points;
+        }
+
+        async function registerActivity(event) {
+            event.preventDefault();
+            
+            const type = document.getElementById('activityType').value;
+            const date = document.getElementById('activityDate').value;
+            const description = document.getElementById('activityDescription').value.trim();
+            const location = document.getElementById('activityLocation').value.trim();
+            const participantsValue = document.getElementById('activityParticipants').value;
+            
+            const errors = [];
+            
+            if (!type || type === '-- Velg type --') {
+                errors.push('❌ Velg type aktivitet');
+            }
+            
+            if (!date) {
+                errors.push('❌ Velg dato');
+            }
+            
+            if (!description || description.length < 10) {
+                errors.push('❌ Beskrivelse må være minst 10 tegn');
+            }
+            
+            if (!location || location.length < 3) {
+                errors.push('❌ Sted må være minst 3 tegn');
+            }
+            
+            if (!participantsValue || participantsValue === '' || isNaN(participantsValue)) {
+                errors.push('❌ Fyll inn antall deltakere (tall)');
+            }
+            
+            if (errors.length > 0) {
+                alert(errors.join('\n'));
+                return;
+            }
+            
+            const participants = parseInt(participantsValue);
+            const points = parseInt(document.getElementById('activityType').selectedOptions[0].getAttribute('data-points'));
+            
+            const activity = {
+                InstruktørID: currentUser.InstruktørID,
+                Instruktør: currentUser.Navn,
+                Dato: date,
+                Type: type,
+                Beskrivelse: description,
+                Sted: location,
+                AntallDeltakere: participants,
+                Poeng: points,
+                RegistrertTidspunkt: firebase.firestore.FieldValue.serverTimestamp(),
+                CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            const form = event.target;
+            const editingId = form.dataset.editingId;
+            
+            try {
+                if (editingId) {
+                    delete activity.CreatedAt;
+                    await db.collection('activities').doc(editingId).update(activity);
+                    alert('✅ Aktivitet oppdatert!');
+                    
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    submitBtn.textContent = '📝 Registrer aktivitet';
+                    submitBtn.style.background = 'var(--dssn-yellow)';
+                    delete form.dataset.editingId;
+                } else {
+                    await db.collection('activities').add(activity);
+                    alert('✅ Aktivitet registrert!');
+                }
+                
+                event.target.reset();
+                document.getElementById('currentPoints').textContent = '0';
+                await loadActivities();
+            } catch (error) {
+                console.error('Register error:', error);
+                alert('❌ Feil ved registrering. Prøv igjen.');
+            }
+        }
+
+        function toggleInstructions() {
+            const content = document.getElementById('instructionsContent');
+            const icon = document.getElementById('toggleIcon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+
+        function downloadMyActivities(type = 'all') {
+            let filteredActivities;
+            let title;
+            let filename;
+            
+            if (type === 'courses') {
+                filteredActivities = activities.filter(a => a.Type !== 'Organisert trening');
+                title = 'DSSN Instruktørportal - Mine kurs';
+                filename = 'Mine_kurs';
+            } else if (type === 'trainings') {
+                filteredActivities = activities.filter(a => a.Type === 'Organisert trening');
+                title = 'DSSN Instruktørportal - Mine treninger';
+                filename = 'Mine_treninger';
+            } else {
+                filteredActivities = activities;
+                title = 'DSSN Instruktørportal - Mine aktiviteter';
+                filename = 'Mine_aktiviteter';
+            }
+            
+            if (filteredActivities.length === 0) {
+                const typeText = type === 'courses' ? 'kurs' : type === 'trainings' ? 'treninger' : 'aktiviteter';
+                alert('Du har ingen ' + typeText + ' å laste ned ennå.');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+            
+            const data = [
+                [title],
+                [''],
+                ['Instruktør:', currentUser.Navn],
+                ['E-post:', currentUser.Epost],
+                ['Klubb:', currentUser.Klubb || '-'],
+                ['Region:', currentUser.Region],
+                [''],
+                ['Dato', 'Type aktivitet', 'Poeng', 'Sted', 'Antall deltakere', 'Beskrivelse']
+            ];
+
+            const sorted = filteredActivities.slice().sort((a, b) => new Date(b.Dato) - new Date(a.Dato));
+            
+            sorted.forEach(a => {
+                data.push([
+                    new Date(a.Dato).toLocaleDateString('no-NO'),
+                    a.Type,
+                    a.Poeng,
+                    a.Sted,
+                    a.AntallDeltakere,
+                    a.Beskrivelse
+                ]);
+            });
+
+            data.push(['']);
+            data.push(['Totalt poeng i år:', filteredActivities.filter(a => new Date(a.Dato).getFullYear() === new Date().getFullYear()).reduce((sum, a) => sum + a.Poeng, 0)]);
+            data.push(['Totalt poeng (alle år):', filteredActivities.reduce((sum, a) => sum + a.Poeng, 0)]);
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            ws['!cols'] = [
+                {wch: 12},
+                {wch: 25},
+                {wch: 8},
+                {wch: 20},
+                {wch: 18},
+                {wch: 50}
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, type === 'courses' ? 'Mine kurs' : type === 'trainings' ? 'Mine treninger' : 'Mine aktiviteter');
+
+            const date = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, filename + '_' + currentUser.Navn.replace(/ /g, '_') + '_' + date + '.xlsx');
+        }
+
+        async function downloadInstruktorCard() {
+            try {
+                if (!currentUser) {
+                    alert('Feil: Brukerdata ikke lastet. Prøv å refresh siden.');
+                    return;
+                }
+
+                console.log('Starter generering av instruktørkort...');
+                
+                const { jsPDF } = window.jspdf;
+                if (!jsPDF) {
+                    alert('Feil: PDF-bibliotek ikke lastet. Refresh siden.');
+                    return;
+                }
+                
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: [85.6, 53.98]
+                });
+
+                pdf.setFillColor(42, 42, 42);
+                pdf.rect(0, 0, 85.6, 53.98, 'F');
+
+                pdf.setFillColor(255, 215, 0);
+                pdf.rect(0, 0, 85.6, 8, 'F');
+
+                const logoUrl = 'https://raw.githubusercontent.com/kurs-dssn/dssn-instruktor/main/DSSN%20logo.png';
+                try {
+                    const response = await fetch(logoUrl);
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            try {
+                                pdf.addImage(reader.result, 'PNG', 3, 10, 15, 15);
+                            } catch (e) {
+                                console.log('Logo kunne ikke legges til:', e);
+                            }
+                            finishCard();
+                        };
+                        reader.readAsDataURL(blob);
+                        return;
+                    }
+                } catch (e) {
+                    console.log('Logo kunne ikke lastes:', e);
+                }
+                finishCard();
+
+                function finishCard() {
+                    try {
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(26, 26, 26);
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.text('DSSN INSTRUKTØRKORT', 42.8, 5, { align: 'center' });
+
+                        pdf.setFontSize(14);
+                        pdf.setTextColor(255, 255, 255);
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.text(currentUser.Navn, 20, 15);
+
+                pdf.setFontSize(9);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text(currentUser.Klubb || 'Ingen klubb', 20, 20);
+                pdf.text(currentUser.Region, 20, 24);
+
+                pdf.setFontSize(11);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('Instruktørnummer:', 20, 32);
+                pdf.setTextColor(255, 215, 0);
+                pdf.setFontSize(16);
+                pdf.text(String(currentUser.Nummer).padStart(3, '0'), 20, 38);
+
+                const currentYear = new Date().getFullYear();
+                const lastYear = currentYear - 1;
+                
+                const yearPoints = activities.filter(a => new Date(a.Dato).getFullYear() === currentYear).reduce((sum, a) => sum + a.Poeng, 0);
+                const lastYearPoints = activities.filter(a => new Date(a.Dato).getFullYear() === lastYear).reduce((sum, a) => sum + a.Poeng, 0);
+                const totalPoints = activities.reduce((sum, a) => sum + a.Poeng, 0);
+                
+                let status, statusColor;
+                if (lastYearPoints >= 6 || yearPoints >= 6) {
+                    status = 'AKTIV';
+                    statusColor = [76, 175, 80];
+                } else {
+                    status = 'INAKTIV';
+                    statusColor = [244, 67, 54];
+                }
+
+                pdf.setTextColor(255, 255, 255);
+                pdf.setFontSize(9);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text('Status:', 20, 45);
+                pdf.setTextColor(...statusColor);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(status, 20, 49);
+
+                pdf.setTextColor(255, 255, 255);
+                pdf.setFontSize(8);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text(`${yearPoints}/6 poeng (Totalt: ${totalPoints})`, 45, 49);
+
+                pdf.setFontSize(6);
+                pdf.setTextColor(150, 150, 150);
+                pdf.text('Dynamisk Sportsskyting Norge', 42.8, 52, { align: 'center' });
+
+                console.log('Lagrer PDF...');
+                pdf.save(`DSSN_Instruktorkort_${currentUser.Nummer}.pdf`);
+                console.log('PDF lagret!');
+                    } catch (error) {
+                        console.error('Feil i finishCard:', error);
+                        alert('Feil ved generering av kort: ' + error.message);
+                    }
+                }
+            } catch (error) {
+                console.error('Feil i downloadInstruktorCard:', error);
+                alert('Feil ved generering av instruktørkort: ' + error.message);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadInstructors();
+            initGDPRCheckbox();
+            setDateLimits();
+            document.getElementById('forgotPasswordLink').onclick = function(e) {
+                e.preventDefault();
+                window.location.href = 'mailto:' + 'kurs' + '@' + 'dssn.no' + '?subject=Glemt%20passord%20-%20DSSN%20Instruktørportal';
+            };
+        });
+ 
