@@ -804,6 +804,12 @@
             font-size: 1.3em;
         }
 
+        .readonly-field {
+            background: var(--dssn-black) !important;
+            cursor: not-allowed !important;
+            color: var(--text-white) !important;
+        }
+
         .report-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1279,23 +1285,23 @@
                     <div class="report-grid-3">
                         <div class="form-group">
                             <label>Match nummer</label>
-                            <input type="text" id="reportMatchId" readonly style="background: var(--dssn-black); cursor: not-allowed; color: var(--text-white);">
+                            <input type="text" id="reportMatchId" readonly class="readonly-field">
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
                             <label>Match navn</label>
-                            <input type="text" id="reportMatchName" readonly style="background: var(--dssn-black); cursor: not-allowed; color: var(--text-white);">
+                            <input type="text" id="reportMatchName" readonly class="readonly-field">
                         </div>
                         <div class="form-group">
                             <label>Level</label>
-                            <input type="text" id="reportLevel" readonly style="background: var(--dssn-black); cursor: not-allowed; color: var(--text-white);">
+                            <input type="text" id="reportLevel" readonly class="readonly-field">
                         </div>
                         <div class="form-group">
                             <label>Dato</label>
-                            <input type="text" id="reportDate" readonly style="background: var(--dssn-black); cursor: not-allowed; color: var(--text-white);">
+                            <input type="text" id="reportDate" readonly class="readonly-field">
                         </div>
                         <div class="form-group">
                             <label>Lokasjon</label>
-                            <input type="text" id="reportLocation" readonly style="background: var(--dssn-black); cursor: not-allowed; color: var(--text-white);">
+                            <input type="text" id="reportLocation" readonly class="readonly-field">
                         </div>
                     </div>
                 </div>
@@ -1306,16 +1312,11 @@
                     
                     <div class="form-group">
                         <label>Var targets til eksakt IPSC spesifikasjon?</label>
-                        <div style="display: flex; gap: 20px; margin-top: 10px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="targetsExact" value="yes" required>
-                                <span>Ja</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="targetsExact" value="no">
-                                <span>Nei</span>
-                            </label>
-                        </div>
+                        <select name="targetsExact" id="targetsExact" required>
+                            <option value="">Velg...</option>
+                            <option value="yes">Ja</option>
+                            <option value="no">Nei</option>
+                        </select>
                     </div>
 
                     <div class="report-grid">
@@ -1413,44 +1414,29 @@
 
                     <div class="form-group">
                         <label>Var personellet tilstrekkelig for arrangementet?</label>
-                        <div style="display: flex; gap: 20px; margin-top: 10px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="staffSufficient" value="yes" required>
-                                <span>Ja</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="staffSufficient" value="no">
-                                <span>Nei</span>
-                            </label>
-                        </div>
+                        <select name="staffSufficient" id="staffSufficient" required>
+                            <option value="">Velg...</option>
+                            <option value="yes">Ja</option>
+                            <option value="no">Nei</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
                         <label>Fikk range staff tilstrekkelige pauser for måltid, toalett, etc?</label>
-                        <div style="display: flex; gap: 20px; margin-top: 10px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="staffBreaks" value="yes" required>
-                                <span>Ja</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="staffBreaks" value="no">
-                                <span>Nei</span>
-                            </label>
-                        </div>
+                        <select name="staffBreaks" id="staffBreaks" required>
+                            <option value="">Velg...</option>
+                            <option value="yes">Ja</option>
+                            <option value="no">Nei</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
                         <label>Fikk range staff mulighet til å skyte arrangementet?</label>
-                        <div style="display: flex; gap: 20px; margin-top: 10px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="staffShoot" value="yes" required>
-                                <span>Ja</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="staffShoot" value="no">
-                                <span>Nei</span>
-                            </label>
-                        </div>
+                        <select name="staffShoot" id="staffShoot" required>
+                            <option value="">Velg...</option>
+                            <option value="yes">Ja</option>
+                            <option value="no">Nei</option>
+                        </select>
                     </div>
                 </div>
 
@@ -1466,6 +1452,7 @@
                 <div style="display: flex; gap: 10px; margin-top: 30px;">
                     <button type="submit" class="btn" style="flex: 1;" id="submitReportBtn">Send inn rapport</button>
                     <button type="button" class="btn btn-secondary" onclick="hideRMReportModal()" style="flex: 1;">Avbryt</button>
+                    <button type="button" class="btn" style="flex: 1; background: #d32f2f; display: none;" id="deleteReportBtn" onclick="deleteReportFromModal()">Slett rapport</button>
                 </div>
             </form>
         </div>
@@ -2465,6 +2452,7 @@
                         populateReportForm(report);
                         document.getElementById('rmReportTitle').textContent = 'Rediger RM Rapport';
                         document.getElementById('submitReportBtn').textContent = 'Oppdater rapport';
+                        document.getElementById('deleteReportBtn').style.display = 'block';
                     }
                 } else {
                     // Clear form for new report
@@ -2474,6 +2462,7 @@
                     document.getElementById('stageAssignmentsContainer').innerHTML = '';
                     document.getElementById('rmReportTitle').textContent = 'Fyll ut RM Rapport';
                     document.getElementById('submitReportBtn').textContent = 'Send inn rapport';
+                    document.getElementById('deleteReportBtn').style.display = 'none';
                 }
                 
                 document.getElementById('rmReportModal').classList.add('show');
@@ -2579,7 +2568,7 @@
 
         function populateReportForm(report) {
             // Targets exact
-            document.querySelector(`input[name="targetsExact"][value="${report.targetsExact}"]`).checked = true;
+            document.getElementById('targetsExact').value = report.targetsExact || '';
             
             // Stages
             document.getElementById('reportStageCount').value = report.stageCount || '';
@@ -2626,9 +2615,9 @@
             document.getElementById('staffIROA').value = report.staffIROA || 0;
             document.getElementById('staffNROI').value = report.staffNROI || 0;
             document.getElementById('staffOthers').value = report.staffOthers || 0;
-            document.querySelector(`input[name="staffSufficient"][value="${report.staffSufficient}"]`).checked = true;
-            document.querySelector(`input[name="staffBreaks"][value="${report.staffBreaks}"]`).checked = true;
-            document.querySelector(`input[name="staffShoot"][value="${report.staffShoot}"]`).checked = true;
+            document.getElementById('staffSufficient').value = report.staffSufficient || '';
+            document.getElementById('staffBreaks').value = report.staffBreaks || '';
+            document.getElementById('staffShoot').value = report.staffShoot || '';
             
             // Stage assignments
             document.getElementById('stageAssignmentsContainer').innerHTML = '';
@@ -2699,7 +2688,7 @@
                     matchId: currentReportMatchId,
                     rmUserId: currentUser.uid,
                     rmEmail: currentUser.email,
-                    targetsExact: document.querySelector('input[name="targetsExact"]:checked').value,
+                    targetsExact: document.getElementById('targetsExact').value,
                     stageCount: parseInt(document.getElementById('reportStageCount').value),
                     minRounds: parseInt(document.getElementById('reportMinRounds').value),
                     shortCourses: parseInt(document.getElementById('reportShortCourses').value) || 0,
@@ -2717,9 +2706,9 @@
                     staffIROA: parseInt(document.getElementById('staffIROA').value) || 0,
                     staffNROI: parseInt(document.getElementById('staffNROI').value) || 0,
                     staffOthers: parseInt(document.getElementById('staffOthers').value) || 0,
-                    staffSufficient: document.querySelector('input[name="staffSufficient"]:checked').value,
-                    staffBreaks: document.querySelector('input[name="staffBreaks"]:checked').value,
-                    staffShoot: document.querySelector('input[name="staffShoot"]:checked').value,
+                    staffSufficient: document.getElementById('staffSufficient').value,
+                    staffBreaks: document.getElementById('staffBreaks').value,
+                    staffShoot: document.getElementById('staffShoot').value,
                     stageAssignments: stageAssignments,
                     updatedAt: new Date().toISOString()
                 };
@@ -2793,6 +2782,41 @@
             // Same as openRMReport but in read-only mode
             // For now, just open it - we can add read-only styling later
             alert('Visning av låste rapporter kommer snart. Du kan fortsatt slette rapporten.');
+        }
+
+        async function deleteReportFromModal() {
+            if (!confirm('Er du sikker på at du vil slette denne rapporten? RO-poeng vil også bli fjernet.')) {
+                return;
+            }
+            
+            try {
+                if (!currentReportDocId) {
+                    alert('Ingen rapport å slette');
+                    return;
+                }
+                
+                // Delete the report
+                await db.collection('match_reports').doc(currentReportDocId).delete();
+                
+                // Delete associated points
+                const pointsSnapshot = await db.collection('match_points')
+                    .where('matchId', '==', currentReportMatchId)
+                    .get();
+                
+                const batch = db.batch();
+                pointsSnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                
+                hideRMReportModal();
+                showAlert('Rapport slettet!', 'success', 'rmRapportAlert');
+                await loadRMMatches();
+                
+            } catch (error) {
+                console.error('Error deleting report:', error);
+                alert('Feil ved sletting: ' + error.message);
+            }
         }
     </script>
 </body>
