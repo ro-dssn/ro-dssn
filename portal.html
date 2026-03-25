@@ -595,6 +595,9 @@
 
         function hideCreateMatch() {
             document.getElementById('createMatchModal').classList.remove('show');
+            document.getElementById('createMatchForm').onsubmit = createMatch;
+            const submitBtn = document.querySelector('#createMatchForm button[type="submit"]');
+            if (submitBtn) submitBtn.textContent = 'Opprett match';
         }
 
         function checkRegistrationDeadline() {
@@ -763,8 +766,139 @@
             }
         }
 
-        function editMatch(docId) {
-            alert('Edit-funksjonalitet kommer snart!');
+        async function editMatch(docId) {
+            try {
+                const doc = await db.collection('matches').doc(docId).get();
+                if (!doc.exists) {
+                    showAlert('Match ikke funnet', 'error', 'matchAlert');
+                    return;
+                }
+                
+                const match = doc.data();
+                
+                // Populate form
+                document.getElementById('matchName').value = match.matchName;
+                document.getElementById('discipline').value = match.discipline;
+                document.getElementById('level').value = match.level;
+                document.getElementById('startDate').value = match.startDate;
+                document.getElementById('endDate').value = match.endDate;
+                document.getElementById('affiliatedClub').value = match.affiliatedClub || '';
+                document.getElementById('location').value = match.location;
+                document.getElementById('md').value = match.md || '';
+                document.getElementById('rm').value = match.rm || '';
+                document.getElementById('numStages').value = match.numStages || 0;
+                document.getElementById('minRounds').value = match.minRounds || 0;
+                document.getElementById('participants').value = match.participants || 0;
+                document.getElementById('matchWebUrl').value = match.matchWebUrl || '';
+                document.getElementById('matchContact').value = match.matchContact || '';
+                document.getElementById('matchContactEmail').value = match.matchContactEmail || '';
+                
+                // Update match ID display
+                document.getElementById('matchIdDisplay').textContent = 'Match ID: ' + match.matchId;
+                
+                // Show modal
+                document.getElementById('createMatchModal').classList.add('show');
+                loadClubs();
+                loadROs();
+                
+                // Initialize map and set marker if location exists
+                setTimeout(() => {
+                    if (!map) {
+                        initMap();
+                    }
+                    if (match.locationLat && match.locationLng) {
+                        const position = { lat: match.locationLat, lng: match.locationLng };
+                        map.setCenter(position);
+                        map.setZoom(14);
+                        marker.setPosition(position);
+                        marker.setVisible(true);
+                    }
+                }, 100);
+                
+                // Change form submit handler to update instead of create
+                const form = document.getElementById('createMatchForm');
+                form.onsubmit = async function(event) {
+                    event.preventDefault();
+                    await updateMatch(docId, match.matchId);
+                };
+                
+                // Change button text to "Oppdater match"
+                const submitBtn = document.querySelector('#createMatchForm button[type="submit"]');
+                if (submitBtn) submitBtn.textContent = 'Oppdater match';
+                
+            } catch (error) {
+                console.error('Error loading match:', error);
+                showAlert('Feil ved lasting av match: ' + error.message, 'error', 'matchAlert');
+            }
+        }
+
+        async function updateMatch(docId, matchId) {
+            const level = document.getElementById('level').value;
+            const startDate = document.getElementById('startDate').value;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const matchStart = new Date(startDate);
+            const daysUntilMatch = Math.ceil((matchStart - today) / (1000 * 60 * 60 * 24));
+            
+            if (level === 'Level I' && daysUntilMatch < 1) {
+                showAlert('Level I må registreres minimum 1 dag før gjennomføring', 'error', 'createMatchAlert');
+                return;
+            }
+            
+            if (level !== 'Level I' && daysUntilMatch < 14) {
+                showAlert(level + ' må registreres minimum 14 dager før gjennomføring', 'error', 'createMatchAlert');
+                return;
+            }
+
+            try {
+                let lat = null;
+                let lng = null;
+                if (marker && marker.getVisible()) {
+                    const position = marker.getPosition();
+                    lat = position.lat();
+                    lng = position.lng();
+                }
+
+                const levelValue = document.getElementById('level').value;
+                const levelMatch = levelValue ? levelValue.match(/\d+/) : null;
+                const levelPoints = levelMatch ? parseInt(levelMatch[0]) : 0;
+
+                const matchData = {
+                    matchName: document.getElementById('matchName').value,
+                    discipline: document.getElementById('discipline').value,
+                    level: levelValue,
+                    levelPoints: levelPoints,
+                    affiliatedClub: document.getElementById('affiliatedClub').value || '',
+                    location: document.getElementById('location').value,
+                    locationLat: lat,
+                    locationLng: lng,
+                    startDate: document.getElementById('startDate').value,
+                    endDate: document.getElementById('endDate').value,
+                    md: document.getElementById('md').value || '',
+                    rm: document.getElementById('rm').value || '',
+                    numStages: parseInt(document.getElementById('numStages').value) || 0,
+                    minRounds: parseInt(document.getElementById('minRounds').value) || 0,
+                    participants: parseInt(document.getElementById('participants').value) || 0,
+                    matchWebUrl: document.getElementById('matchWebUrl').value || '',
+                    matchContact: document.getElementById('matchContact').value || '',
+                    matchContactEmail: document.getElementById('matchContactEmail').value || '',
+                    updatedAt: new Date().toISOString()
+                };
+
+                await db.collection('matches').doc(docId).update(matchData);
+                
+                showAlert('Match oppdatert! Match ID: ' + matchId, 'success', 'matchAlert');
+                hideCreateMatch();
+                
+                // Reset form handler back to create
+                document.getElementById('createMatchForm').onsubmit = createMatch;
+                
+                await loadMatches();
+                
+            } catch (error) {
+                console.error('Error updating match:', error);
+                showAlert('Feil ved oppdatering av match: ' + error.message, 'error', 'createMatchAlert');
+            }
         }
     </script>
 </body>
