@@ -1282,12 +1282,16 @@
                 <!-- MATCH DETAILS SECTION -->
                 <div class="report-section">
                     <h3>Match Detaljer</h3>
-                    <div class="report-grid-3">
+                    <div class="report-grid-3" style="grid-template-columns: 1fr 1fr 2fr 1fr;">
                         <div class="form-group">
                             <label>Match nummer</label>
                             <input type="text" id="reportMatchId" readonly class="readonly-field">
                         </div>
-                        <div class="form-group" style="grid-column: span 2;">
+                        <div class="form-group">
+                            <label>Range Master</label>
+                            <input type="text" id="reportRM" readonly class="readonly-field">
+                        </div>
+                        <div class="form-group">
                             <label>Match navn</label>
                             <input type="text" id="reportMatchName" readonly class="readonly-field">
                         </div>
@@ -1295,6 +1299,8 @@
                             <label>Level</label>
                             <input type="text" id="reportLevel" readonly class="readonly-field">
                         </div>
+                    </div>
+                    <div class="report-grid" style="margin-top: 15px;">
                         <div class="form-group">
                             <label>Dato</label>
                             <input type="text" id="reportDate" readonly class="readonly-field">
@@ -2426,6 +2432,7 @@
                 
                 // Prefill match details
                 document.getElementById('reportMatchId').value = 'Match ' + match.matchId;
+                document.getElementById('reportRM').value = match.rm || 'Ikke angitt';
                 document.getElementById('reportMatchName').value = match.matchName;
                 document.getElementById('reportLevel').value = match.level;
                 document.getElementById('reportLocation').value = match.location;
