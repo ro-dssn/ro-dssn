@@ -354,7 +354,8 @@
 
                 <div class="form-group">
                     <label for="affiliatedClub">Arrangerende klubb</label>
-                    <input type="text" id="affiliatedClub">
+                    <input type="text" id="affiliatedClub" list="clubList" placeholder="Begynn å skrive klubbnavn...">
+                    <datalist id="clubList"></datalist>
                 </div>
 
                 <div class="form-group">
@@ -371,9 +372,10 @@
                     </div>
                     <div class="form-group">
                         <label for="rm">Range Master</label>
-                        <input type="text" id="rm">
+                        <input type="text" id="rm" list="roList" placeholder="Begynn å skrive navn...">
                     </div>
                 </div>
+                <datalist id="roList"></datalist>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -526,11 +528,63 @@
             }
         }
 
+        async function loadClubs() {
+            try {
+                const response = await fetch('https://ro-dssn.github.io/ro-dssn/klubb.xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                const clubList = document.getElementById('clubList');
+                clubList.innerHTML = '';
+                
+                data.forEach(row => {
+                    if (row[0]) {
+                        const option = document.createElement('option');
+                        option.value = row[0];
+                        clubList.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading clubs:', error);
+            }
+        }
+
+        async function loadROs() {
+            try {
+                const response = await fetch('https://ro-dssn.github.io/ro-dssn/RO.xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(firstSheet);
+                
+                const roList = document.getElementById('roList');
+                roList.innerHTML = '';
+                
+                data.forEach(row => {
+                    const fornavn = row['Fornavn'] || '';
+                    const etternavn = row['Etternavn'] || '';
+                    const fullName = (fornavn + ' ' + etternavn).trim();
+                    
+                    if (fullName) {
+                        const option = document.createElement('option');
+                        option.value = fullName;
+                        roList.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading ROs:', error);
+            }
+        }
+
         function showCreateMatch() {
             document.getElementById('createMatchModal').classList.add('show');
             document.getElementById('createMatchForm').reset();
             document.getElementById('createMatchAlert').classList.add('hidden');
             getNextMatchId();
+            loadClubs();
+            loadROs();
             
             setTimeout(() => {
                 if (!map) {
@@ -594,12 +648,16 @@
                     lng = position.lng();
                 }
 
+                const levelValue = document.getElementById('level').value;
+                const levelMatch = levelValue ? levelValue.match(/\d+/) : null;
+                const levelPoints = levelMatch ? parseInt(levelMatch[0]) : 0;
+
                 const matchData = {
                     matchId: nextMatchId,
                     matchName: document.getElementById('matchName').value,
                     discipline: document.getElementById('discipline').value,
-                    level: document.getElementById('level').value,
-                    levelPoints: parseInt(document.getElementById('level').value.match(/\d+/)[0]),
+                    level: levelValue,
+                    levelPoints: levelPoints,
                     affiliatedClub: document.getElementById('affiliatedClub').value || '',
                     location: document.getElementById('location').value,
                     locationLat: lat,
