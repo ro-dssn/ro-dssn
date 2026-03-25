@@ -1310,18 +1310,7 @@
                 <div class="report-section">
                     <h3>Stages</h3>
                     
-                    <div class="report-grid">
-                        <div class="form-group">
-                            <label>Var targets til eksakt IPSC spesifikasjon?</label>
-                            <select name="targetsExact" id="targetsExact" required>
-                                <option value="">Velg...</option>
-                                <option value="yes">Ja</option>
-                                <option value="no">Nei</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="report-grid">
+                    <div class="report-grid-3">
                         <div class="form-group">
                             <label>Antall stages</label>
                             <input type="number" id="reportStageCount" min="0" required>
@@ -1329,6 +1318,14 @@
                         <div class="form-group">
                             <label>Minimum antall skudd</label>
                             <input type="number" id="reportMinRounds" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Var targets til eksakt IPSC spesifikasjon?</label>
+                            <select name="targetsExact" id="targetsExact" required>
+                                <option value="">Velg...</option>
+                                <option value="yes">Ja</option>
+                                <option value="no">Nei</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label>Short courses</label>
@@ -1412,29 +1409,24 @@
                             <label>Andre</label>
                             <input type="number" id="staffOthers" min="0" value="0">
                         </div>
-                    </div>
-
-                    <div class="report-grid">
                         <div class="form-group">
-                            <label>Var personellet tilstrekkelig for arrangementet?</label>
+                            <label>Var personellet tilstrekkelig for matchen?</label>
                             <select name="staffSufficient" id="staffSufficient" required>
                                 <option value="">Velg...</option>
                                 <option value="yes">Ja</option>
                                 <option value="no">Nei</option>
                             </select>
                         </div>
-
                         <div class="form-group">
-                            <label>Fikk range staff tilstrekkelige pauser for måltid, toalett, etc?</label>
+                            <label>Fikk range staff tilstrekkelige pauser?</label>
                             <select name="staffBreaks" id="staffBreaks" required>
                                 <option value="">Velg...</option>
                                 <option value="yes">Ja</option>
                                 <option value="no">Nei</option>
                             </select>
                         </div>
-
                         <div class="form-group">
-                            <label>Fikk range staff mulighet til å skyte arrangementet?</label>
+                            <label>Fikk range staff mulighet til å skyte matchen?</label>
                             <select name="staffShoot" id="staffShoot" required>
                                 <option value="">Velg...</option>
                                 <option value="yes">Ja</option>
