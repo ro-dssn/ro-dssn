@@ -391,6 +391,212 @@
                 font-size: 0.85em;
             }
         }
+
+        /* POENGKORT STYLES */
+        .points-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--dssn-gray);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid var(--dssn-light-gray);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--dssn-red);
+            transform: translateY(-2px);
+        }
+
+        .stat-card.total-points {
+            border-color: var(--dssn-red);
+            background: linear-gradient(135deg, var(--dssn-gray) 0%, var(--dssn-dark-red) 100%);
+        }
+
+        .stat-icon {
+            font-size: 3em;
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--dssn-red);
+            line-height: 1;
+        }
+
+        .total-points .stat-value {
+            color: #fff;
+        }
+
+        .stat-sublabel {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .level-breakdown {
+            background: var(--dssn-gray);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid var(--dssn-red);
+            margin-bottom: 40px;
+        }
+
+        .level-card {
+            background: var(--dssn-light-gray);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .level-card:hover {
+            border-color: var(--dssn-red);
+        }
+
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .level-name {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .level-points {
+            color: var(--dssn-red);
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .level-progress {
+            height: 12px;
+            background: var(--dssn-black);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--dssn-red) 0%, #ff6b6b 100%);
+            transition: width 0.5s ease;
+        }
+
+        .level-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .level-breakdown-link {
+            color: var(--dssn-red);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .level-breakdown-link:hover {
+            color: #ff6b6b;
+        }
+
+        .match-history {
+            background: var(--dssn-gray);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid var(--dssn-red);
+        }
+
+        .history-item {
+            background: var(--dssn-light-gray);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 20px;
+            align-items: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            border-color: var(--dssn-red);
+        }
+
+        .history-date {
+            font-weight: bold;
+            color: var(--dssn-red);
+        }
+
+        .history-match-name {
+            font-size: 1.1em;
+        }
+
+        .history-role {
+            background: var(--dssn-red);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .history-points {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--dssn-red);
+        }
+
+        @media (max-width: 768px) {
+            .points-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stat-card {
+                padding: 20px;
+            }
+            
+            .stat-icon {
+                font-size: 2em;
+            }
+            
+            .stat-value {
+                font-size: 2em;
+            }
+            
+            .history-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .history-role {
+                width: fit-content;
+            }
+        }
     </style>
 </head>
 <body>
@@ -425,10 +631,141 @@
         </div>
 
         <div id="poengkortTab" class="tab-content">
-            <h2 style="color: var(--dssn-red); font-size: 2em; margin-bottom: 30px;">Poengkort</h2>
-            <div class="empty-state">
-                <h2>Kommer snart</h2>
-                <p>Poengkort-funksjonalitet er under utvikling.</p>
+            <div style="margin-bottom: 30px;">
+                <h2 style="color: var(--dssn-red); font-size: 2em; margin-bottom: 10px;">Poengkort</h2>
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <select id="yearFilter" onchange="loadPoints()" style="padding: 10px; background: var(--dssn-light-gray); border: 2px solid var(--dssn-red); border-radius: 8px; color: var(--text-white); font-size: 1em;">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="all">Alle år</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="exportPointsCard()">📊 Eksporter til Excel</button>
+                </div>
+            </div>
+
+            <!-- DASHBOARD STATS -->
+            <div class="points-dashboard">
+                <div class="stat-card total-points">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Totale poeng</div>
+                        <div class="stat-value" id="totalPoints">0</div>
+                        <div class="stat-sublabel">Dette året</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Matches</div>
+                        <div class="stat-value" id="totalMatches">0</div>
+                        <div class="stat-sublabel">Som RO/CRO/RM</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Høyeste Level</div>
+                        <div class="stat-value" id="highestLevel">-</div>
+                        <div class="stat-sublabel">Jobbet på</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Hovedrolle</div>
+                        <div class="stat-value" id="primaryRole">-</div>
+                        <div class="stat-sublabel">Mest brukt</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEVEL BREAKDOWN -->
+            <div class="level-breakdown">
+                <h3 style="color: var(--dssn-red); margin-bottom: 20px;">Poeng per Level</h3>
+                
+                <div class="level-card">
+                    <div class="level-header">
+                        <span class="level-name">Level I</span>
+                        <span class="level-points"><span id="level1Points">0</span> poeng</span>
+                    </div>
+                    <div class="level-progress">
+                        <div class="progress-bar" id="level1Bar" style="width: 0%"></div>
+                    </div>
+                    <div class="level-details">
+                        <span id="level1Count">0 matches</span>
+                        <span class="level-breakdown-link" onclick="showLevelDetails(1)">Se detaljer →</span>
+                    </div>
+                </div>
+                
+                <div class="level-card">
+                    <div class="level-header">
+                        <span class="level-name">Level II</span>
+                        <span class="level-points"><span id="level2Points">0</span> poeng</span>
+                    </div>
+                    <div class="level-progress">
+                        <div class="progress-bar" id="level2Bar" style="width: 0%"></div>
+                    </div>
+                    <div class="level-details">
+                        <span id="level2Count">0 matches</span>
+                        <span class="level-breakdown-link" onclick="showLevelDetails(2)">Se detaljer →</span>
+                    </div>
+                </div>
+                
+                <div class="level-card">
+                    <div class="level-header">
+                        <span class="level-name">Level III</span>
+                        <span class="level-points"><span id="level3Points">0</span> poeng</span>
+                    </div>
+                    <div class="level-progress">
+                        <div class="progress-bar" id="level3Bar" style="width: 0%"></div>
+                    </div>
+                    <div class="level-details">
+                        <span id="level3Count">0 matches</span>
+                        <span class="level-breakdown-link" onclick="showLevelDetails(3)">Se detaljer →</span>
+                    </div>
+                </div>
+                
+                <div class="level-card">
+                    <div class="level-header">
+                        <span class="level-name">Level IV</span>
+                        <div class="level-points"><span id="level4Points">0</span> poeng</span>
+                    </div>
+                    <div class="level-progress">
+                        <div class="progress-bar" id="level4Bar" style="width: 0%"></div>
+                    </div>
+                    <div class="level-details">
+                        <span id="level4Count">0 matches</span>
+                        <span class="level-breakdown-link" onclick="showLevelDetails(4)">Se detaljer →</span>
+                    </div>
+                </div>
+                
+                <div class="level-card">
+                    <div class="level-header">
+                        <span class="level-name">Level V</span>
+                        <span class="level-points"><span id="level5Points">0</span> poeng</span>
+                    </div>
+                    <div class="level-progress">
+                        <div class="progress-bar" id="level5Bar" style="width: 0%"></div>
+                    </div>
+                    <div class="level-details">
+                        <span id="level5Count">0 matches</span>
+                        <span class="level-breakdown-link" onclick="showLevelDetails(5)">Se detaljer →</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MATCH HISTORY -->
+            <div class="match-history">
+                <h3 style="color: var(--dssn-red); margin-bottom: 20px;">Match-historikk</h3>
+                <div id="pointsMatchList">
+                    <div class="empty-state">
+                        <p>Laster poengkort...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -639,6 +976,11 @@
             
             event.target.classList.add('active');
             document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Load points when poengkort tab is opened
+            if (tabName === 'poengkort') {
+                loadPoints();
+            }
         }
 
         function logout() {
@@ -907,6 +1249,103 @@
                 console.error('Error deleting match:', error);
                 showAlert('Feil ved sletting: ' + error.message, 'error', 'matchAlert');
             }
+        }
+
+        // POENGKORT FUNCTIONS
+        async function loadPoints() {
+            const year = document.getElementById('yearFilter').value;
+            
+            try {
+                let query = db.collection('matches')
+                    .where('createdBy', '==', currentUser.uid);
+                
+                if (year !== 'all') {
+                    const startDate = year + '-01-01';
+                    const endDate = year + '-12-31';
+                    query = query.where('startDate', '>=', startDate).where('startDate', '<=', endDate);
+                }
+                
+                const snapshot = await query.get();
+                
+                let totalPoints = 0;
+                let levelCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+                let levelPoints = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+                let highestLevel = 0;
+                
+                let matchesHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const match = doc.data();
+                    const points = match.levelPoints || 0;
+                    const levelMatch = match.level.match(/\d+/);
+                    const level = levelMatch ? parseInt(levelMatch[0]) : 0;
+                    
+                    if (level > 0) {
+                        totalPoints += points;
+                        levelCounts[level]++;
+                        levelPoints[level] += points;
+                        
+                        if (level > highestLevel) highestLevel = level;
+                        
+                        matchesHTML += `
+                            <div class="history-item">
+                                <div class="history-date">${match.startDate}</div>
+                                <div>
+                                    <div class="history-match-name">${match.matchName}</div>
+                                    <div style="color: #888; font-size: 0.9em;">${match.discipline} • ${match.level}</div>
+                                </div>
+                                <div class="history-role">RM</div>
+                                <div class="history-points">+${points}</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                // Update dashboard stats
+                document.getElementById('totalPoints').textContent = totalPoints;
+                document.getElementById('totalMatches').textContent = snapshot.size;
+                document.getElementById('highestLevel').textContent = highestLevel > 0 ? 'Level ' + highestLevel : '-';
+                document.getElementById('primaryRole').textContent = 'RM';
+                
+                // Update level cards
+                const maxPoints = Math.max(...Object.values(levelPoints), 1);
+                
+                for (let i = 1; i <= 5; i++) {
+                    document.getElementById(`level${i}Points`).textContent = levelPoints[i];
+                    document.getElementById(`level${i}Count`).textContent = levelCounts[i] + ' matches';
+                    const percentage = (levelPoints[i] / maxPoints) * 100;
+                    document.getElementById(`level${i}Bar`).style.width = percentage + '%';
+                }
+                
+                // Update match history
+                if (matchesHTML) {
+                    document.getElementById('pointsMatchList').innerHTML = matchesHTML;
+                } else {
+                    document.getElementById('pointsMatchList').innerHTML = `
+                        <div class="empty-state">
+                            <h2>Ingen matches funnet</h2>
+                            <p>Du har ikke registrert noen matches for ${year === 'all' ? 'noen år' : year} ennå.</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error loading points:', error);
+                document.getElementById('pointsMatchList').innerHTML = `
+                    <div class="empty-state">
+                        <h2>Feil ved lasting</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showLevelDetails(level) {
+            alert(`Detaljert visning for Level ${level} kommer snart!`);
+        }
+
+        function exportPointsCard() {
+            alert('Excel-eksport av poengkort kommer snart!');
         }
 
         async function editMatch(docId) {
