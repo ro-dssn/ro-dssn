@@ -2340,7 +2340,8 @@
                     const doc = { id: matchItem.id };
                     const match = matchItem.data;
                     const matchStart = new Date(match.startDate);
-                    const isAvailable = matchStart <= today;
+                    matchStart.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+                    const isAvailable = matchStart <= today; // Available from (and including) match start date
                     
                     // Check if report exists
                     const reportSnapshot = await db.collection('match_reports')
