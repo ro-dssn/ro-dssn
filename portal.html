@@ -56,9 +56,11 @@
             font-size: 1em;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
         .btn:hover {
             background: var(--dssn-dark-red);
+            transform: translateY(-2px);
         }
         .btn-secondary {
             background: var(--dssn-light-gray);
@@ -261,6 +263,94 @@
             border: 2px solid var(--dssn-red);
         }
 
+        /* POENGKORT TOOLBAR STYLES */
+        .poengkort-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .poengkort-title {
+            color: var(--dssn-red);
+            font-size: 2em;
+        }
+
+        .poengkort-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--dssn-gray);
+            padding: 5px 15px 5px 10px;
+            border-radius: 10px;
+            border: 2px solid var(--dssn-light-gray);
+            transition: all 0.3s ease;
+        }
+
+        .filter-wrapper:hover {
+            border-color: var(--dssn-red);
+        }
+
+        .filter-icon {
+            font-size: 1.2em;
+        }
+
+        .year-select {
+            padding: 10px 35px 10px 12px;
+            background: var(--dssn-light-gray);
+            border: 2px solid var(--dssn-red);
+            border-radius: 8px;
+            color: var(--text-white);
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C41E3A' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .year-select:hover {
+            background-color: #404040;
+            border-color: #ff6b6b;
+        }
+
+        .export-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--dssn-red);
+            color: var(--text-white);
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: var(--dssn-dark-red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.4);
+        }
+
+        .export-icon {
+            font-size: 1.2em;
+        }
+
         /* RESPONSIVE DESIGN - MOBIL OG TABLET */
         
         @media (max-width: 768px) {
@@ -368,6 +458,31 @@
             .form-group textarea {
                 font-size: 16px; /* Prevents iOS zoom */
             }
+
+            /* Poengkort header */
+            .poengkort-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .poengkort-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .filter-wrapper {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .year-select {
+                flex: 1;
+            }
+
+            .export-btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
         
         @media (min-width: 769px) and (max-width: 1024px) {
@@ -404,6 +519,9 @@
             }
             .match-meta {
                 font-size: 0.85em;
+            }
+            .poengkort-title {
+                font-size: 1.5em;
             }
         }
 
@@ -646,16 +764,23 @@
         </div>
 
         <div id="poengkortTab" class="tab-content">
-            <div style="margin-bottom: 30px;">
-                <h2 style="color: var(--dssn-red); font-size: 2em; margin-bottom: 10px;">Poengkort</h2>
-                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                    <select id="yearFilter" onchange="loadPoints()" style="padding: 10px; background: var(--dssn-light-gray); border: 2px solid var(--dssn-red); border-radius: 8px; color: var(--text-white); font-size: 1em;">
-                        <option value="2026">2026</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                        <option value="all">Alle år</option>
-                    </select>
-                    <button class="btn btn-secondary" onclick="exportPointsCard()">📊 Eksporter til Excel</button>
+            <!-- FORBEDRET HEADER MED KONTROLLER -->
+            <div class="poengkort-header">
+                <h2 class="poengkort-title">Poengkort</h2>
+                <div class="poengkort-controls">
+                    <div class="filter-wrapper">
+                        <span class="filter-icon">📅</span>
+                        <select id="yearFilter" onchange="loadPoints()" class="year-select">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="all">Alle år</option>
+                        </select>
+                    </div>
+                    <button class="export-btn" onclick="exportPointsCard()">
+                        <span class="export-icon">📊</span>
+                        <span>Eksporter til Excel</span>
+                    </button>
                 </div>
             </div>
 
