@@ -248,6 +248,149 @@
             background: var(--dssn-light-gray);
             border: 2px solid var(--dssn-red);
         }
+
+        /* RESPONSIVE DESIGN - MOBIL OG TABLET */
+        
+        @media (max-width: 768px) {
+            /* Header */
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            .header h1 {
+                font-size: 1.5em;
+            }
+            .user-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .user-email {
+                font-size: 0.9em;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            
+            /* Tabs */
+            .tabs {
+                padding: 0 10px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .tab {
+                padding: 12px 15px;
+                font-size: 0.9em;
+                white-space: nowrap;
+            }
+            
+            /* Content */
+            .content {
+                padding: 20px 15px;
+            }
+            
+            /* Buttons */
+            .btn {
+                padding: 12px 16px;
+                font-size: 0.95em;
+            }
+            
+            /* Form rows - single column on mobile */
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            /* Modal */
+            .modal {
+                padding: 10px;
+            }
+            .modal-content {
+                padding: 25px 20px;
+                max-height: 95vh;
+            }
+            .modal-content h2 {
+                font-size: 1.5em;
+            }
+            
+            /* Match ID display */
+            .match-id-display {
+                font-size: 1.2em;
+                padding: 12px;
+            }
+            
+            /* Match items */
+            .match-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                padding: 15px;
+            }
+            .match-info h3 {
+                font-size: 1.1em;
+            }
+            .match-meta {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            .match-meta span {
+                margin-right: 0;
+            }
+            .match-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+            .match-actions button {
+                width: 100%;
+            }
+            
+            /* Map */
+            #mapContainer {
+                height: 250px;
+            }
+            
+            /* Form inputs */
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                font-size: 16px; /* Prevents iOS zoom */
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+            /* Tablet adjustments */
+            .header {
+                padding: 20px 30px;
+            }
+            .content {
+                padding: 30px 25px;
+            }
+            .modal-content {
+                max-width: 700px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Extra small phones */
+            .header h1 {
+                font-size: 1.3em;
+            }
+            .btn {
+                font-size: 0.9em;
+                padding: 10px 14px;
+            }
+            .tab {
+                padding: 10px 12px;
+                font-size: 0.85em;
+            }
+            .match-info h3 {
+                font-size: 1em;
+            }
+            .match-meta {
+                font-size: 0.85em;
+            }
+        }
     </style>
 </head>
 <body>
