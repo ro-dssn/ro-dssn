@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DSSN RO-portal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         :root {
             --dssn-red: #C41E3A;
             --dssn-dark-red: #8B0000;
@@ -14,470 +17,652 @@
             --dssn-gray: #2a2a2a;
             --dssn-light-gray: #3a3a3a;
             --text-white: #ffffff;
-            --success: #4CAF50;
-            --warning: #ff9800;
-            --error: #f44336;
         }
-        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--dssn-black);
+            background: linear-gradient(135deg, var(--dssn-black) 0%, var(--dssn-gray) 100%);
             color: var(--text-white);
             min-height: 100vh;
         }
-        
-        /* Header */
         .header {
-            background: linear-gradient(135deg, var(--dssn-gray) 0%, var(--dssn-black) 100%);
-            border-bottom: 2px solid var(--dssn-red);
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(196, 30, 58, 0.3);
-        }
-        
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
+            background: var(--dssn-black);
+            padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 3px solid var(--dssn-red);
         }
-        
-        .logo {
-            font-size: 1.5em;
-            font-weight: bold;
+        .header h1 {
             color: var(--dssn-red);
+            font-size: 2em;
         }
-        
         .user-info {
             display: flex;
             align-items: center;
             gap: 20px;
         }
-        
         .user-email {
             color: #cccccc;
         }
-        
-        .btn-logout {
-            padding: 8px 16px;
-            background: var(--dssn-red);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .btn-logout:hover {
-            background: var(--dssn-dark-red);
-        }
-        
-        /* Navigation */
-        .nav {
-            background: var(--dssn-gray);
-            border-bottom: 1px solid var(--dssn-light-gray);
-        }
-        
-        .nav-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            gap: 5px;
-            padding: 0 20px;
-        }
-        
-        .nav-btn {
-            padding: 15px 25px;
-            background: transparent;
-            color: #cccccc;
-            border: none;
-            cursor: pointer;
-            font-size: 15px;
-            transition: all 0.3s;
-            border-bottom: 3px solid transparent;
-        }
-        
-        .nav-btn:hover {
-            background: rgba(196, 30, 58, 0.1);
-            color: var(--text-white);
-        }
-        
-        .nav-btn.active {
-            color: var(--dssn-red);
-            border-bottom-color: var(--dssn-red);
-        }
-        
-        /* Main Content */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px 20px;
-        }
-        
-        .view {
-            display: none;
-        }
-        
-        .view.active {
-            display: block;
-        }
-        
-        .card {
-            background: var(--dssn-gray);
-            border: 1px solid var(--dssn-light-gray);
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 20px;
-        }
-        
-        .card h2 {
-            color: var(--dssn-red);
-            margin-bottom: 20px;
-            font-size: 1.8em;
-        }
-        
-        /* Table */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--dssn-light-gray);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        thead {
-            background: var(--dssn-red);
-        }
-        
-        th {
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: white;
-        }
-        
-        td {
-            padding: 12px;
-            border-bottom: 1px solid var(--dssn-gray);
-        }
-        
-        tbody tr:hover {
-            background: rgba(196, 30, 58, 0.1);
-        }
-        
-        /* Buttons */
         .btn {
             padding: 10px 20px;
             background: var(--dssn-red);
-            color: white;
+            color: var(--text-white);
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
         }
-        
         .btn:hover {
             background: var(--dssn-dark-red);
         }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 13px;
+        .btn-secondary {
+            background: var(--dssn-light-gray);
+            border: 2px solid var(--dssn-red);
         }
-        
-        .btn-success {
-            background: var(--success);
+        .tabs {
+            display: flex;
+            background: var(--dssn-black);
+            padding: 0 40px;
+            gap: 5px;
         }
-        
-        .btn-success:hover {
-            background: #45a049;
+        .tab {
+            padding: 15px 30px;
+            background: transparent;
+            color: #888;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            border-bottom: 3px solid transparent;
         }
-        
-        /* Alert */
-        .alert {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
+        .tab.active {
+            color: var(--dssn-red);
+            border-bottom-color: var(--dssn-red);
+        }
+        .content {
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .tab-content {
             display: none;
         }
-        
-        .alert.show {
+        .tab-content.active {
             display: block;
         }
-        
-        .alert-success {
-            background: rgba(76, 175, 80, 0.2);
-            border: 1px solid var(--success);
-            color: #ccffcc;
-        }
-        
-        .alert-error {
-            background: rgba(244, 67, 54, 0.2);
-            border: 1px solid var(--error);
-            color: #ffcccc;
-        }
-        
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #888;
-        }
-        
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
+            padding: 100px 20px;
             color: #888;
         }
-        
-        .empty-state h3 {
-            color: #aaa;
+        .empty-state h2 {
+            font-size: 2em;
             margin-bottom: 10px;
+        }
+        .card {
+            background: var(--dssn-gray);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid var(--dssn-red);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            color: var(--dssn-red);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cccccc;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--dssn-light-gray);
+            border: 2px solid var(--dssn-red);
+            border-radius: 8px;
+            color: var(--text-white);
+            font-size: 1em;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .match-list {
+            display: grid;
+            gap: 20px;
+        }
+        .match-item {
+            background: var(--dssn-light-gray);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid var(--dssn-red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .match-info h3 {
+            color: var(--dssn-red);
+            margin-bottom: 10px;
+        }
+        .match-meta {
+            color: #cccccc;
+            font-size: 0.9em;
+        }
+        .match-meta span {
+            margin-right: 15px;
+        }
+        .match-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--dssn-gray);
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 800px;
+            width: 100%;
+            border: 2px solid var(--dssn-red);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+        }
+        .alert-error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #f44336;
+            color: #f44336;
+        }
+        .alert-warning {
+            background: rgba(255, 152, 0, 0.2);
+            border: 2px solid #ff9800;
+            color: #ff9800;
+        }
+        .hidden {
+            display: none;
+        }
+        .match-id-display {
+            font-size: 1.5em;
+            color: var(--dssn-red);
+            font-weight: bold;
+            text-align: center;
+            padding: 15px;
+            background: var(--dssn-light-gray);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        #mapContainer {
+            height: 300px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background: var(--dssn-light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">DSSN RO-portal</div>
-            <div class="user-info">
-                <span class="user-email" id="userEmail">Laster...</span>
-                <button class="btn-logout" onclick="logout()">Logg ut</button>
+    <div class="header">
+        <h1>DSSN RO-portal</h1>
+        <div class="user-info">
+            <span class="user-email" id="userEmail">Laster...</span>
+            <button class="btn" onclick="logout()">Logg ut</button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('matches')">Matches</button>
+        <button class="tab" onclick="showTab('poengkort')">Poengkort</button>
+        <button class="tab" onclick="showTab('claim')">Claim poeng</button>
+        <button class="tab" onclick="showTab('profil')">Min profil</button>
+    </div>
+
+    <div class="content">
+        <div id="matchesTab" class="tab-content active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 style="color: var(--dssn-red); font-size: 2em;">Matches</h2>
+                <button class="btn" onclick="showCreateMatch()">+ Registrer ny match</button>
+            </div>
+            <div id="matchAlert" class="alert hidden"></div>
+            <div id="matchList" class="match-list">
+                <div class="empty-state">
+                    <h2>Ingen matches funnet</h2>
+                    <p>Det er ingen registrerte matches ennå.</p>
+                </div>
             </div>
         </div>
-    </header>
-    
-    <!-- Navigation -->
-    <nav class="nav">
-        <div class="nav-content">
-            <button class="nav-btn active" onclick="showView('matches')">Matches</button>
-            <button class="nav-btn" onclick="showView('points')">Poengkort</button>
-            <button class="nav-btn" onclick="showView('claim')">Claim poeng</button>
-            <button class="nav-btn" onclick="showView('profile')">Min profil</button>
-        </div>
-    </nav>
-    
-    <!-- Main Content -->
-    <div class="container">
-        <div id="alert" class="alert"></div>
-        
-        <!-- Matches View -->
-        <div id="matchesView" class="view active">
-            <div class="card">
-                <h2>Matches</h2>
-                <div id="matchesContent" class="loading">Laster matches...</div>
+
+        <div id="poengkortTab" class="tab-content">
+            <h2 style="color: var(--dssn-red); font-size: 2em; margin-bottom: 30px;">Poengkort</h2>
+            <div class="empty-state">
+                <h2>Kommer snart</h2>
+                <p>Poengkort-funksjonalitet er under utvikling.</p>
             </div>
         </div>
-        
-        <!-- Points Card View -->
-        <div id="pointsView" class="view">
-            <div class="card">
-                <h2>Poengkort (Inneværende år)</h2>
-                <div id="pointsContent" class="loading">Laster poengkort...</div>
+
+        <div id="claimTab" class="tab-content">
+            <h2 style="color: var(--dssn-red); font-size: 2em; margin-bottom: 30px;">Claim poeng</h2>
+            <div class="empty-state">
+                <h2>Kommer snart</h2>
+                <p>Claim poeng-funksjonalitet er under utvikling.</p>
             </div>
         </div>
-        
-        <!-- Claim Points View -->
-        <div id="claimView" class="view">
-            <div class="card">
-                <h2>Claim match poeng</h2>
-                <p style="color: #aaa; margin-bottom: 20px;">(Matches som endte siste 3 måneder)</p>
-                <div id="claimContent" class="loading">Laster tilgjengelige matches...</div>
-            </div>
-        </div>
-        
-        <!-- Profile View -->
-        <div id="profileView" class="view">
-            <div class="card">
-                <h2>Min profil</h2>
-                <div id="profileContent" class="loading">Laster profil...</div>
+
+        <div id="profilTab" class="tab-content">
+            <h2 style="color: var(--dssn-red); font-size: 2em; margin-bottom: 30px;">Min profil</h2>
+            <div class="empty-state">
+                <h2>Kommer snart</h2>
+                <p>Profil-funksjonalitet er under utvikling.</p>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-        import { getFirestore, collection, getDocs, query, where, orderBy, limit, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    <div id="createMatchModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--dssn-red); margin-bottom: 20px;">Registrer ny match</h2>
+            <div id="matchIdDisplay" class="match-id-display">Match ID: Laster...</div>
+            <div id="createMatchAlert" class="alert hidden"></div>
+            <form id="createMatchForm" onsubmit="createMatch(event)">
+                <div class="form-group">
+                    <label for="matchName">Match navn *</label>
+                    <input type="text" id="matchName" required>
+                </div>
 
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="discipline">Disiplin *</label>
+                        <select id="discipline" required>
+                            <option value="">Velg disiplin</option>
+                            <option value="IPSC Handgun">IPSC Handgun</option>
+                            <option value="IPSC Rifle">IPSC Rifle</option>
+                            <option value="IPSC Shotgun">IPSC Shotgun</option>
+                            <option value="IPSC PCC">IPSC PCC</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="level">Level *</label>
+                        <select id="level" required onchange="checkRegistrationDeadline()">
+                            <option value="">Velg level</option>
+                            <option value="Level I">Level I (1 poeng)</option>
+                            <option value="Level II">Level II (2 poeng)</option>
+                            <option value="Level III">Level III (3 poeng)</option>
+                            <option value="Level IV">Level IV (4 poeng)</option>
+                            <option value="Level V">Level V (5 poeng)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="affiliatedClub">Arrangerende klubb</label>
+                        <input type="text" id="affiliatedClub">
+                    </div>
+                    <div class="form-group">
+                        <label for="region">Region *</label>
+                        <select id="region" required>
+                            <option value="">Velg region</option>
+                            <option value="Norge">Norge</option>
+                            <option value="Østlandet">Østlandet</option>
+                            <option value="Vestlandet">Vestlandet</option>
+                            <option value="Sørlandet">Sørlandet</option>
+                            <option value="Midt-Norge">Midt-Norge</option>
+                            <option value="Nord-Norge">Nord-Norge</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Lokasjon (adresse) *</label>
+                    <input type="text" id="location" required placeholder="F.eks. Kongsberg Pistolklubb, Kongsberg">
+                </div>
+
+                <div id="mapContainer">
+                    Kart kommer snart
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">Start dato *</label>
+                        <input type="date" id="startDate" required onchange="checkRegistrationDeadline()">
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">Slutt dato *</label>
+                        <input type="date" id="endDate" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="md">Match Director</label>
+                        <input type="text" id="md">
+                    </div>
+                    <div class="form-group">
+                        <label for="rm">Range Master</label>
+                        <input type="text" id="rm">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numStages">Antall stages</label>
+                        <input type="number" id="numStages" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="minRounds">Min. antall skudd</label>
+                        <input type="number" id="minRounds" min="0" value="0">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="localEntryfee">Lokale deltakere (antall)</label>
+                        <input type="number" id="localEntryfee" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="usdEntryfee">Utenlandske deltakere (antall)</label>
+                        <input type="number" id="usdEntryfee" min="0" value="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="matchWebUrl">Match URL (WinMSS/PractiScore)</label>
+                    <input type="url" id="matchWebUrl" placeholder="https://...">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="matchContact">Kontaktperson</label>
+                        <input type="text" id="matchContact">
+                    </div>
+                    <div class="form-group">
+                        <label for="matchContactEmail">Kontakt e-post</label>
+                        <input type="email" id="matchContactEmail">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn" style="flex: 1;">Opprett match</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideCreateMatch()" style="flex: 1;">Avbryt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyC0OvKlWDriZxE_MhM-BADXDDirjbEQU0w",
             authDomain: "dssn-ro.firebaseapp.com",
             projectId: "dssn-ro",
             storageBucket: "dssn-ro.firebasestorage.app",
             messagingSenderId: "412595017547",
-            appId: "1:412595017547:web:e1e7fbcc4e99077bae7ace",
-            measurementId: "G-F0YKJVHW2E"
+            appId: "1:412595017547:web:e1e7fbcc4e99077bae7ace"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
         let currentUser = null;
+        let nextMatchId = 8000;
 
-        // Auth State Handler
-        onAuthStateChanged(auth, async (user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = 'index.html';
                 return;
             }
-            
             currentUser = user;
             document.getElementById('userEmail').textContent = user.email;
-            
-            // Load initial data
-            loadMatches();
+            await loadMatches();
+            await getNextMatchId();
         });
 
-        // Logout
-        window.logout = async () => {
-            await signOut(auth);
-            window.location.href = 'index.html';
-        };
-
-        // Navigation
-        window.showView = (viewName) => {
-            // Update nav buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            
             event.target.classList.add('active');
-            
-            // Update views
-            document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
-            document.getElementById(viewName + 'View').classList.add('active');
-            
-            // Load data for the view
-            switch(viewName) {
-                case 'matches':
-                    loadMatches();
-                    break;
-                case 'points':
-                    loadPointsCard();
-                    break;
-                case 'claim':
-                    loadClaimableMatches();
-                    break;
-                case 'profile':
-                    loadProfile();
-                    break;
-            }
-        };
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
 
-        // Load Matches
-        async function loadMatches() {
-            const content = document.getElementById('matchesContent');
-            
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
+        }
+
+        function showAlert(message, type, elementId) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.innerHTML = message;
+            alertDiv.className = 'alert alert-' + type;
+            alertDiv.classList.remove('hidden');
+            setTimeout(() => alertDiv.classList.add('hidden'), 5000);
+        }
+
+        async function getNextMatchId() {
             try {
-                const matchesRef = collection(db, 'matches');
-                const q = query(matchesRef, orderBy('matchStart', 'desc'), limit(20));
-                const snapshot = await getDocs(q);
+                const counterDoc = await db.collection('counters').doc('matchId').get();
+                if (counterDoc.exists) {
+                    nextMatchId = counterDoc.data().current || 8000;
+                } else {
+                    await db.collection('counters').doc('matchId').set({ current: 8000 });
+                    nextMatchId = 8000;
+                }
+                document.getElementById('matchIdDisplay').textContent = 'Match ID: ' + nextMatchId;
+            } catch (error) {
+                console.error('Error getting match ID:', error);
+                nextMatchId = 8000;
+            }
+        }
+
+        function showCreateMatch() {
+            document.getElementById('createMatchModal').classList.add('show');
+            document.getElementById('createMatchForm').reset();
+            document.getElementById('createMatchAlert').classList.add('hidden');
+            getNextMatchId();
+        }
+
+        function hideCreateMatch() {
+            document.getElementById('createMatchModal').classList.remove('show');
+        }
+
+        function checkRegistrationDeadline() {
+            const level = document.getElementById('level').value;
+            const startDate = document.getElementById('startDate').value;
+            
+            if (!level || !startDate) return;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const matchStart = new Date(startDate);
+            const daysUntilMatch = Math.ceil((matchStart - today) / (1000 * 60 * 60 * 24));
+            
+            const alertDiv = document.getElementById('createMatchAlert');
+            
+            if (level === 'Level I' && daysUntilMatch < 1) {
+                showAlert('Level I må registreres minimum 1 dag før gjennomføring', 'warning', 'createMatchAlert');
+            } else if (level !== 'Level I' && daysUntilMatch < 14) {
+                showAlert(level + ' må registreres minimum 14 dager før gjennomføring', 'warning', 'createMatchAlert');
+            } else {
+                alertDiv.classList.add('hidden');
+            }
+        }
+
+        async function createMatch(event) {
+            event.preventDefault();
+            
+            const level = document.getElementById('level').value;
+            const startDate = document.getElementById('startDate').value;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const matchStart = new Date(startDate);
+            const daysUntilMatch = Math.ceil((matchStart - today) / (1000 * 60 * 60 * 24));
+            
+            if (level === 'Level I' && daysUntilMatch < 1) {
+                showAlert('Level I må registreres minimum 1 dag før gjennomføring', 'error', 'createMatchAlert');
+                return;
+            }
+            
+            if (level !== 'Level I' && daysUntilMatch < 14) {
+                showAlert(level + ' må registreres minimum 14 dager før gjennomføring', 'error', 'createMatchAlert');
+                return;
+            }
+
+            try {
+                const matchData = {
+                    matchId: nextMatchId,
+                    matchName: document.getElementById('matchName').value,
+                    discipline: document.getElementById('discipline').value,
+                    level: document.getElementById('level').value,
+                    levelPoints: parseInt(document.getElementById('level').value.match(/\d+/)[0]),
+                    affiliatedClub: document.getElementById('affiliatedClub').value || '',
+                    region: document.getElementById('region').value,
+                    location: document.getElementById('location').value,
+                    startDate: document.getElementById('startDate').value,
+                    endDate: document.getElementById('endDate').value,
+                    md: document.getElementById('md').value || '',
+                    rm: document.getElementById('rm').value || '',
+                    numStages: parseInt(document.getElementById('numStages').value) || 0,
+                    minRounds: parseInt(document.getElementById('minRounds').value) || 0,
+                    localEntryfee: parseInt(document.getElementById('localEntryfee').value) || 0,
+                    usdEntryfee: parseInt(document.getElementById('usdEntryfee').value) || 0,
+                    matchWebUrl: document.getElementById('matchWebUrl').value || '',
+                    matchContact: document.getElementById('matchContact').value || '',
+                    matchContactEmail: document.getElementById('matchContactEmail').value || '',
+                    createdBy: currentUser.uid,
+                    createdByEmail: currentUser.email,
+                    createdAt: new Date().toISOString()
+                };
+
+                await db.collection('matches').add(matchData);
+                await db.collection('counters').doc('matchId').set({ current: nextMatchId + 1 });
+                
+                showAlert('Match opprettet! Match ID: ' + nextMatchId, 'success', 'matchAlert');
+                hideCreateMatch();
+                await loadMatches();
+                
+            } catch (error) {
+                console.error('Error creating match:', error);
+                showAlert('Feil ved opprettelse av match: ' + error.message, 'error', 'createMatchAlert');
+            }
+        }
+
+        async function loadMatches() {
+            try {
+                const snapshot = await db.collection('matches')
+                    .where('createdBy', '==', currentUser.uid)
+                    .orderBy('startDate', 'desc')
+                    .get();
+                
+                const matchList = document.getElementById('matchList');
                 
                 if (snapshot.empty) {
-                    content.innerHTML = '<div class="empty-state"><h3>Ingen matches funnet</h3><p>Det er ingen registrerte matches ennå.</p></div>';
+                    matchList.innerHTML = `
+                        <div class="empty-state">
+                            <h2>Ingen matches funnet</h2>
+                            <p>Det er ingen registrerte matches ennå.</p>
+                        </div>
+                    `;
                     return;
                 }
                 
-                let html = `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Match #</th>
-                                <th>Match navn</th>
-                                <th>Discipline</th>
-                                <th>Level</th>
-                                <th>Region</th>
-                                <th>Dato</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
+                let html = '';
                 snapshot.forEach(doc => {
                     const match = doc.data();
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const matchStart = new Date(match.startDate);
+                    const canEdit = matchStart >= today;
+                    
                     html += `
-                        <tr>
-                            <td>${match.matchId || '-'}</td>
-                            <td>${match.matchName || '-'}</td>
-                            <td>${match.discipline || '-'}</td>
-                            <td>${match.level || '-'}</td>
-                            <td>${match.region || '-'}</td>
-                            <td>${formatDate(match.matchStart)}</td>
-                        </tr>
+                        <div class="match-item">
+                            <div class="match-info">
+                                <h3>Match ${match.matchId}: ${match.matchName}</h3>
+                                <div class="match-meta">
+                                    <span><strong>Disiplin:</strong> ${match.discipline}</span>
+                                    <span><strong>Level:</strong> ${match.level}</span>
+                                    <span><strong>Dato:</strong> ${match.startDate}</span>
+                                    <span><strong>Sted:</strong> ${match.location}</span>
+                                </div>
+                            </div>
+                            <div class="match-actions">
+                                ${canEdit ? `
+                                    <button class="btn btn-small btn-secondary" onclick="editMatch('${doc.id}')">Rediger</button>
+                                    <button class="btn btn-small" onclick="deleteMatch('${doc.id}', ${match.matchId})">Slett</button>
+                                ` : `
+                                    <span style="color: #888; font-size: 0.9em;">Match startet - kan ikke redigeres</span>
+                                `}
+                            </div>
+                        </div>
                     `;
                 });
                 
-                html += '</tbody></table>';
-                content.innerHTML = html;
+                matchList.innerHTML = html;
                 
             } catch (error) {
                 console.error('Error loading matches:', error);
-                content.innerHTML = '<div class="empty-state"><h3>Feil ved lasting</h3><p>' + error.message + '</p></div>';
+                showAlert('Feil ved lasting av matches: ' + error.message, 'error', 'matchAlert');
             }
         }
 
-        // Load Points Card
-        async function loadPointsCard() {
-            const content = document.getElementById('pointsContent');
-            const currentYear = new Date().getFullYear();
-            
-            content.innerHTML = `
-                <div class="empty-state">
-                    <h3>Poengkort for ${currentYear}</h3>
-                    <p>Poengkort-funksjonalitet kommer snart.</p>
-                </div>
-            `;
-        }
-
-        // Load Claimable Matches
-        async function loadClaimableMatches() {
-            const content = document.getElementById('claimContent');
-            
-            content.innerHTML = `
-                <div class="empty-state">
-                    <h3>Claim match poeng</h3>
-                    <p>Claim-funksjonalitet kommer snart.</p>
-                </div>
-            `;
-        }
-
-        // Load Profile
-        async function loadProfile() {
-            const content = document.getElementById('profileContent');
-            
-            if (!currentUser) return;
+        async function deleteMatch(docId, matchId) {
+            if (!confirm('Er du sikker på at du vil slette Match ' + matchId + '?')) {
+                return;
+            }
             
             try {
-                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-                const userData = userDoc.data() || {};
-                
-                content.innerHTML = `
-                    <div style="max-width: 600px;">
-                        <p><strong>E-post:</strong> ${currentUser.email}</p>
-                        <p><strong>Rolle:</strong> Range Officer</p>
-                        <p><strong>Siste innlogging:</strong> ${userData.lastLogin ? formatDate(userData.lastLogin) : '-'}</p>
-                    </div>
-                `;
-                
+                await db.collection('matches').doc(docId).delete();
+                showAlert('Match slettet!', 'success', 'matchAlert');
+                await loadMatches();
             } catch (error) {
-                console.error('Error loading profile:', error);
-                content.innerHTML = '<div class="empty-state"><h3>Feil ved lasting</h3></div>';
+                console.error('Error deleting match:', error);
+                showAlert('Feil ved sletting: ' + error.message, 'error', 'matchAlert');
             }
         }
 
-        // Utility Functions
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('no-NO', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        }
-
-        function showAlert(message, type) {
-            const alert = document.getElementById('alert');
-            alert.textContent = message;
-            alert.className = `alert alert-${type} show`;
-            setTimeout(() => alert.classList.remove('show'), 5000);
+        function editMatch(docId) {
+            alert('Edit-funksjonalitet kommer snart!');
         }
     </script>
 </body>
