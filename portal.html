@@ -1276,8 +1276,12 @@
                 <!-- MATCH DETAILS SECTION -->
                 <div class="report-section">
                     <h3>Match Detaljer</h3>
-                    <div class="report-grid">
+                    <div class="report-grid-3">
                         <div class="form-group">
+                            <label>Match nummer</label>
+                            <input type="text" id="reportMatchId" readonly style="background: var(--dssn-black); cursor: not-allowed;">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
                             <label>Match navn</label>
                             <input type="text" id="reportMatchName" readonly style="background: var(--dssn-black); cursor: not-allowed;">
                         </div>
@@ -1286,12 +1290,12 @@
                             <input type="text" id="reportLevel" readonly style="background: var(--dssn-black); cursor: not-allowed;">
                         </div>
                         <div class="form-group">
-                            <label>Lokasjon</label>
-                            <input type="text" id="reportLocation" readonly style="background: var(--dssn-black); cursor: not-allowed;">
-                        </div>
-                        <div class="form-group">
                             <label>Dato</label>
                             <input type="text" id="reportDate" readonly style="background: var(--dssn-black); cursor: not-allowed;">
+                        </div>
+                        <div class="form-group">
+                            <label>Lokasjon</label>
+                            <input type="text" id="reportLocation" readonly style="background: var(--dssn-black); cursor: not-allowed;">
                         </div>
                     </div>
                 </div>
@@ -2430,10 +2434,25 @@
                 currentReportDocId = reportDocId;
                 
                 // Prefill match details
+                document.getElementById('reportMatchId').value = 'Match ' + match.matchId;
                 document.getElementById('reportMatchName').value = match.matchName;
                 document.getElementById('reportLevel').value = match.level;
                 document.getElementById('reportLocation').value = match.location;
                 document.getElementById('reportDate').value = match.startDate;
+                
+                // Prefill stages data if available from match
+                if (match.numStages) {
+                    document.getElementById('reportStageCount').value = match.numStages;
+                }
+                if (match.minRounds) {
+                    document.getElementById('reportMinRounds').value = match.minRounds;
+                }
+                
+                // Prefill competitors count if available
+                if (match.participants) {
+                    // We can put total in Production as default, or leave it for RM to fill
+                    // document.getElementById('compProduction').value = match.participants;
+                }
                 
                 // Load RO list for autocomplete
                 await loadROListForReport();
