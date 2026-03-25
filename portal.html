@@ -2361,21 +2361,29 @@
                     
                     if (!isAvailable) {
                         statusBadge = '<span class="rm-report-status status-pending">Venter på matchstart</span>';
-                        actionButtons = '<span style="color: #888; font-size: 0.9em;">Rapport tilgjengelig fra ' + match.startDate + '</span>';
+                        actionButtons = `
+                            <span style="color: #888; font-size: 0.9em;">Rapport tilgjengelig fra ${match.startDate}</span>
+                            <button class="btn btn-small" style="background: #d32f2f; margin-left: 10px;" onclick="deleteMatch('${doc.id}', ${match.matchId})">Slett match</button>
+                        `;
                     } else if (!hasReport) {
                         statusBadge = '<span class="rm-report-status status-available">Klar til utfylling</span>';
-                        actionButtons = `<button class="btn btn-small" onclick="openRMReport('${doc.id}', ${match.matchId})">Fyll ut rapport</button>`;
+                        actionButtons = `
+                            <button class="btn btn-small" onclick="openRMReport('${doc.id}', ${match.matchId})">Fyll ut rapport</button>
+                            <button class="btn btn-small" style="background: #d32f2f;" onclick="deleteMatch('${doc.id}', ${match.matchId})">Slett match</button>
+                        `;
                     } else if (canEdit) {
                         statusBadge = '<span class="rm-report-status status-submitted">Innsendt - kan redigeres</span>';
                         actionButtons = `
                             <button class="btn btn-small btn-secondary" onclick="openRMReport('${doc.id}', ${match.matchId}, '${reportDocId}')">Se/rediger rapport</button>
                             <button class="btn btn-small" style="background: #d32f2f;" onclick="deleteRMReport('${reportDocId}', ${match.matchId})">Slett rapport</button>
+                            <button class="btn btn-small" style="background: #8B0000;" onclick="deleteMatch('${doc.id}', ${match.matchId})">Slett match</button>
                         `;
                     } else {
                         statusBadge = '<span class="rm-report-status status-locked">Innsendt - låst for redigering</span>';
                         actionButtons = `
                             <button class="btn btn-small btn-secondary" onclick="viewRMReport('${reportDocId}')">Se rapport</button>
                             <button class="btn btn-small" style="background: #d32f2f;" onclick="deleteRMReport('${reportDocId}', ${match.matchId})">Slett rapport</button>
+                            <button class="btn btn-small" style="background: #8B0000;" onclick="deleteMatch('${doc.id}', ${match.matchId})">Slett match</button>
                         `;
                     }
                     
@@ -2786,6 +2794,45 @@
             // Same as openRMReport but in read-only mode
             // For now, just open it - we can add read-only styling later
             alert('Visning av låste rapporter kommer snart. Du kan fortsatt slette rapporten.');
+        }
+
+        async function deleteMatch(matchDocId, matchId) {
+            if (!confirm('Er du sikker på at du vil slette denne matchen? Dette vil også slette alle rapporter og RO-poeng knyttet til matchen.')) {
+                return;
+            }
+            
+            try {
+                // Delete the match
+                await db.collection('matches').doc(matchDocId).delete();
+                
+                // Delete any associated reports
+                const reportsSnapshot = await db.collection('match_reports')
+                    .where('matchId', '==', matchId)
+                    .get();
+                
+                const batch = db.batch();
+                reportsSnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                
+                // Delete associated points
+                const pointsSnapshot = await db.collection('match_points')
+                    .where('matchId', '==', matchId)
+                    .get();
+                
+                pointsSnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                
+                await batch.commit();
+                
+                showAlert('Match slettet!', 'success', 'rmRapportAlert');
+                await loadRMMatches();
+                
+            } catch (error) {
+                console.error('Error deleting match:', error);
+                alert('Feil ved sletting av match: ' + error.message);
+            }
         }
 
         async function deleteReportFromModal() {
