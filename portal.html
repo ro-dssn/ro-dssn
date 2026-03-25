@@ -25,7 +25,6 @@
             color: var(--text-white);
             min-height: 100vh;
             overflow-x: hidden;
-            touch-action: pan-y;
         }
         .header {
             background: var(--dssn-black);
@@ -135,7 +134,14 @@
             color: var(--text-white);
             font-size: 1em;
             font-family: inherit;
-            touch-action: manipulation;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .form-group input[type="date"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
         .form-group select {
             appearance: none;
