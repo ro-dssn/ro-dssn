@@ -89,7 +89,7 @@
         }
         .hidden { display: none; }
         .gdpr-modal {
-            display: none;
+            display: flex;
             position: fixed;
             top: 0;
             left: 0;
@@ -100,6 +100,32 @@
             align-items: center;
             justify-content: center;
             overflow-y: auto;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .gdpr-modal.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        .activation-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .activation-modal.show {
+            visibility: visible;
+            opacity: 1;
         }
         .gdpr-content {
             background: var(--dssn-gray);
@@ -195,7 +221,7 @@
         </div>
 
         <!-- Activation Modal -->
-        <div id="activationModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div id="activationModal" class="activation-modal">
             <div style="background: var(--dssn-gray); padding: 40px; border-radius: 15px; max-width: 500px; width: 90%; border: 2px solid var(--dssn-red);">
                 <h2 style="color: var(--dssn-red); margin-bottom: 20px;">Aktiver bruker</h2>
                 <div id="activationAlert" class="alert alert-info hidden"></div>
@@ -402,12 +428,22 @@
 
         // Activation Functions
         function showActivation() {
-            document.getElementById('activationModal').style.display = 'flex';
+            console.log('showActivation called');
+            const modal = document.getElementById('activationModal');
+            console.log('Modal element:', modal);
+            if (modal) {
+                modal.classList.add('show');
+                console.log('Added show class, classList:', modal.classList);
+            } else {
+                console.error('activationModal not found!');
+            }
         }
 
         function hideActivation() {
-            document.getElementById('activationModal').style.display = 'none';
+            const modal = document.getElementById('activationModal');
+            modal.classList.remove('show');
             document.getElementById('activationForm').reset();
+        }
             document.getElementById('activationAlert').classList.add('hidden');
         }
 
@@ -481,7 +517,7 @@
 
         // GDPR Functions
         function showGDPRModal() {
-            document.getElementById('gdprModal').style.display = 'flex';
+            document.getElementById('gdprModal').classList.add('show');
         }
 
         document.getElementById('gdprAcceptCheckbox').addEventListener('change', function() {
