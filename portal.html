@@ -1935,26 +1935,39 @@
             const year = document.getElementById('yearFilter').value;
             
             try {
-                let query = db.collection('matches')
-                    .where('createdBy', '==', currentUser.uid);
+                // Hent alle poeng fra match_points collection
+                let query = db.collection('match_points');
                 
+                // Filter på år hvis ikke "all"
                 if (year !== 'all') {
                     const startDate = year + '-01-01';
                     const endDate = year + '-12-31';
-                    query = query.where('startDate', '>=', startDate).where('startDate', '<=', endDate);
+                    query = query.where('date', '>=', startDate).where('date', '<=', endDate);
                 }
                 
                 const snapshot = await query.get();
                 
                 // Hent også alle år totalt for "Totalt antall poeng (alle år)" kortet
-                const allYearsSnapshot = await db.collection('matches')
-                    .where('createdBy', '==', currentUser.uid)
-                    .get();
+                const allYearsSnapshot = await db.collection('match_points').get();
+                
+                // Group points by roName/email to match current user
+                const userEmail = currentUser.email;
+                const userName = userEmail.split('@')[0].toLowerCase();
                 
                 let totalPointsAllTime = 0;
+                let userPointsAllTime = [];
+                
                 allYearsSnapshot.forEach(doc => {
-                    const match = doc.data();
-                    totalPointsAllTime += match.levelPoints || 0;
+                    const point = doc.data();
+                    userPointsAllTime.push(point);
+                    
+                    // Check if this point belongs to current user
+                    const pointName = (point.roName || '').toLowerCase();
+                    const pointEmail = (point.createdByEmail || '').toLowerCase();
+                    
+                    if (pointName.includes(userName) || pointEmail === userEmail.toLowerCase()) {
+                        totalPointsAllTime += point.points || 0;
+                    }
                 });
                 
                 let totalPoints = 0;
@@ -1962,35 +1975,44 @@
                 let levelPoints = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
                 
                 let matchesHTML = '';
+                let matchCount = 0;
                 
                 snapshot.forEach(doc => {
-                    const match = doc.data();
-                    const points = match.levelPoints || 0;
-                    const levelMatch = match.level.match(/\d+/);
-                    const level = levelMatch ? parseInt(levelMatch[0]) : 0;
+                    const point = doc.data();
                     
-                    if (level > 0) {
-                        totalPoints += points;
-                        levelCounts[level]++;
-                        levelPoints[level] += points;
+                    // Check if this point belongs to current user
+                    const pointName = (point.roName || '').toLowerCase();
+                    const pointEmail = (point.createdByEmail || '').toLowerCase();
+                    
+                    if (pointName.includes(userName) || pointEmail === userEmail.toLowerCase()) {
+                        const points = point.points || 0;
+                        const levelMatch = point.level ? point.level.match(/\d+/) : null;
+                        const level = levelMatch ? parseInt(levelMatch[0]) : 0;
                         
-                        matchesHTML += `
-                            <div class="history-item">
-                                <div class="history-date">${match.startDate}</div>
-                                <div>
-                                    <div class="history-match-name">${match.matchName}</div>
-                                    <div style="color: #888; font-size: 0.9em;">${match.discipline} • ${match.level}</div>
+                        if (level > 0) {
+                            totalPoints += points;
+                            levelCounts[level]++;
+                            levelPoints[level] += points;
+                            matchCount++;
+                            
+                            matchesHTML += `
+                                <div class="history-item">
+                                    <div class="history-date">${point.date}</div>
+                                    <div>
+                                        <div class="history-match-name">${point.matchName}</div>
+                                        <div style="color: #888; font-size: 0.9em;">Match ${point.matchId} • ${point.level}</div>
+                                    </div>
+                                    <div class="history-role">${point.role}</div>
+                                    <div class="history-points">+${points}</div>
                                 </div>
-                                <div class="history-role">RM</div>
-                                <div class="history-points">+${points}</div>
-                            </div>
-                        `;
+                            `;
+                        }
                     }
                 });
                 
                 // Update dashboard stats
                 document.getElementById('totalPoints').textContent = totalPoints;
-                document.getElementById('totalMatches').textContent = snapshot.size;
+                document.getElementById('totalMatches').textContent = matchCount;
                 document.getElementById('totalPointsAllTime').textContent = totalPointsAllTime;
                 
                 // Update level cards
@@ -2009,8 +2031,8 @@
                 } else {
                     document.getElementById('pointsMatchList').innerHTML = `
                         <div class="empty-state">
-                            <h2>Ingen matches funnet</h2>
-                            <p>Du har ikke registrert noen matches for ${year === 'all' ? 'noen år' : year} ennå.</p>
+                            <h2>Ingen poeng funnet</h2>
+                            <p>Du har ikke fått poeng for ${year === 'all' ? 'noen år' : year} ennå.</p>
                         </div>
                     `;
                 }
@@ -2031,28 +2053,37 @@
             const year = document.getElementById('yearFilter').value;
             
             try {
-                let query = db.collection('matches')
-                    .where('createdBy', '==', currentUser.uid);
+                let query = db.collection('match_points');
                 
                 if (year !== 'all') {
                     const startDate = year + '-01-01';
                     const endDate = year + '-12-31';
-                    query = query.where('startDate', '>=', startDate).where('startDate', '<=', endDate);
+                    query = query.where('date', '>=', startDate).where('date', '<=', endDate);
                 }
                 
                 const snapshot = await query.get();
+                
+                const userEmail = currentUser.email;
+                const userName = userEmail.split('@')[0].toLowerCase();
                 
                 let levelMatches = [];
                 let totalPoints = 0;
                 
                 snapshot.forEach(doc => {
-                    const match = doc.data();
-                    const levelMatch = match.level.match(/\d+/);
-                    const matchLevel = levelMatch ? parseInt(levelMatch[0]) : 0;
+                    const point = doc.data();
                     
-                    if (matchLevel === level) {
-                        levelMatches.push(match);
-                        totalPoints += match.levelPoints || 0;
+                    // Check if this point belongs to current user
+                    const pointName = (point.roName || '').toLowerCase();
+                    const pointEmail = (point.createdByEmail || '').toLowerCase();
+                    
+                    if (pointName.includes(userName) || pointEmail === userEmail.toLowerCase()) {
+                        const levelMatch = point.level ? point.level.match(/\d+/) : null;
+                        const matchLevel = levelMatch ? parseInt(levelMatch[0]) : 0;
+                        
+                        if (matchLevel === level) {
+                            levelMatches.push(point);
+                            totalPoints += point.points || 0;
+                        }
                     }
                 });
                 
@@ -2074,16 +2105,16 @@
                     `;
                 } else {
                     let html = '';
-                    levelMatches.forEach(match => {
+                    levelMatches.forEach(point => {
                         html += `
                             <div class="level-match-item">
-                                <div class="history-date">${match.startDate}</div>
+                                <div class="history-date">${point.date}</div>
                                 <div>
-                                    <div class="history-match-name">${match.matchName}</div>
-                                    <div style="color: #888; font-size: 0.9em;">${match.discipline} • ${match.location}</div>
+                                    <div class="history-match-name">${point.matchName}</div>
+                                    <div style="color: #888; font-size: 0.9em;">Match ${point.matchId}</div>
                                 </div>
-                                <div class="history-role">RM</div>
-                                <div class="history-points">+${match.levelPoints || 0}</div>
+                                <div class="history-role">${point.role}</div>
+                                <div class="history-points">+${point.points || 0}</div>
                             </div>
                         `;
                     });
@@ -2107,32 +2138,40 @@
             const year = document.getElementById('yearFilter').value;
             
             try {
-                let query = db.collection('matches')
-                    .where('createdBy', '==', currentUser.uid);
+                let query = db.collection('match_points');
                 
                 if (year !== 'all') {
                     const startDate = year + '-01-01';
                     const endDate = year + '-12-31';
-                    query = query.where('startDate', '>=', startDate).where('startDate', '<=', endDate);
+                    query = query.where('date', '>=', startDate).where('date', '<=', endDate);
                 }
                 
                 const snapshot = await query.get();
                 
+                const userEmail = currentUser.email;
+                const userName = userEmail.split('@')[0].toLowerCase();
+                
                 // Prepare data for Excel
                 const data = [];
-                data.push(['Dato', 'Match', 'Disiplin', 'Level', 'Poeng', 'Lokasjon', 'Klubb']);
+                data.push(['Dato', 'Match ID', 'Match navn', 'Level', 'Rolle', 'Poeng']);
                 
                 snapshot.forEach(doc => {
-                    const match = doc.data();
-                    data.push([
-                        match.startDate,
-                        match.matchName,
-                        match.discipline,
-                        match.level,
-                        match.levelPoints || 0,
-                        match.location,
-                        match.affiliatedClub || ''
-                    ]);
+                    const point = doc.data();
+                    
+                    // Check if this point belongs to current user
+                    const pointName = (point.roName || '').toLowerCase();
+                    const pointEmail = (point.createdByEmail || '').toLowerCase();
+                    
+                    if (pointName.includes(userName) || pointEmail === userEmail.toLowerCase()) {
+                        data.push([
+                            point.date,
+                            point.matchId,
+                            point.matchName,
+                            point.level,
+                            point.role,
+                            point.points || 0
+                        ]);
+                    }
                 });
                 
                 // Create workbook
@@ -2739,6 +2778,30 @@
                     reportData.createdAt = new Date().toISOString();
                     await db.collection('match_reports').add(reportData);
                     
+                    // Get RM name from match data
+                    const rmName = matchData.rm || currentUser.email.split('@')[0];
+                    
+                    // Check if RM is already in stageAssignments
+                    const rmInAssignments = stageAssignments.some(sa => 
+                        sa.name.toLowerCase() === rmName.toLowerCase()
+                    );
+                    
+                    // Give RM automatic points (unless already in stageAssignments)
+                    if (!rmInAssignments) {
+                        await db.collection('match_points').add({
+                            matchId: currentReportMatchId,
+                            matchName: matchData.matchName,
+                            roName: rmName,
+                            role: 'RM',
+                            level: matchData.level,
+                            points: levelPoints,
+                            date: matchData.startDate,
+                            createdBy: currentUser.uid,
+                            createdByEmail: currentUser.email,
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+                    
                     // Create points entries for all ROs in stage assignments
                     for (const assignment of stageAssignments) {
                         await db.collection('match_points').add({
@@ -2750,11 +2813,12 @@
                             points: levelPoints,
                             date: matchData.startDate,
                             createdBy: currentUser.uid,
+                            createdByEmail: currentUser.email,
                             createdAt: new Date().toISOString()
                         });
                     }
                     
-                    showAlert('Rapport innsendt! RO-er har fått poeng.', 'success', 'rmRapportAlert');
+                    showAlert('Rapport innsendt! RM og RO-er har fått poeng.', 'success', 'rmRapportAlert');
                 }
                 
                 hideRMReportModal();
